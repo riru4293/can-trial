@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.14)
 
 # Set project data
-set(PROJECT_NAME "RP2040_FREERTOS_PROJECT")
+set(PROJECT_NAME "CAN-TRIAL_PROJECT")
 set(BUILD_NUMBER "1")
 
 # Set app name(s) and version(s)
-set(APP_1_NAME "CAN-TRIAL")
-set(APP_1_VERSION_NUMBER "0.0.2")
+set(APP_NAME "CAN-TRIAL")
+set(APP_VERSION_NUMBER "0.0.2")
 
 # Specify the app(s) source code
-set(APP_1_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/CAN-TRIAL")
+set(APP_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/CAN-TRIAL")
 
 # FROM 1.4.2 -- Set app-side debugging on debug builds
 # Now uses CMake generator expression to extract config type
@@ -56,4 +56,4 @@ target_include_directories(FreeRTOS PUBLIC
 )
 
 # Include the apps' source code
-add_subdirectory(${APP_1_SRC_DIRECTORY})
+add_subdirectory(${APP_SRC_DIRECTORY})
