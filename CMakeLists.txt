@@ -5,11 +5,11 @@ set(PROJECT_NAME "CAN-TRIAL_PROJECT")
 set(BUILD_NUMBER "1")
 
 # Set app name(s) and version(s)
-set(APP_NAME "CAN-TRIAL")
-set(APP_VERSION_NUMBER "0.0.2")
+set(APP_01_NAME "appl-01")
+set(APP_01_VERSION_NUMBER "0.0.2")
 
 # Specify the app(s) source code
-set(APP_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/CAN-TRIAL")
+set(APP_01_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/appl-01")
 
 # FROM 1.4.2 -- Set app-side debugging on debug builds
 # Now uses CMake generator expression to extract config type
@@ -23,7 +23,7 @@ set(ENV{PICO_SDK_PATH} "${CMAKE_SOURCE_DIR}/pico-sdk")
 # Set flags and directory variables
 set(FREERTOS_CFG_DIRECTORY "${CMAKE_SOURCE_DIR}/FreeRTOS-Config")
 set(FREERTOS_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/FreeRTOS-Kernel")
-set(COMMON_INCLUDE_DIRECTORY "${CMAKE_SOURCE_DIR}/${APP_NAME}/include")
+set(APP_01_INCLUDE_DIRECTORY "${CMAKE_SOURCE_DIR}/${APP_01_NAME}/include")
 
 # Include the Pico SDK
 include(pico_sdk_import.cmake)
@@ -58,4 +58,4 @@ target_include_directories(FreeRTOS PUBLIC
 )
 
 # Include the apps' source code
-add_subdirectory(${APP_SRC_DIRECTORY})
+add_subdirectory(${APP_01_SRC_DIRECTORY})
