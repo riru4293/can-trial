@@ -27,7 +27,7 @@
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
-            "gdbPath": "C:/Program Files/Raspberry Pi/Pico SDK v1.5.1/gcc-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
+            "gdbPath": "arm-none-eabi-gdb.exe",
             "device": "RP2040",
             "configFiles": [
                 "interface/cmsis-dap.cfg",

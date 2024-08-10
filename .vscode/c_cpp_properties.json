@@ -3,11 +3,10 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${env:PICO_SDK_PATH}/**"
+                "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "${env:PICO_SDK_PATH}/gcc-arm-none-eabi/bin/arm-none-eabi-gcc.exe",
+            "compilerPath": "${env:PICO_SDK_UNIXPATH}/gcc-arm-none-eabi/bin/arm-none-eabi-gcc.exe",
             "cStandard": "c11",
             "cppStandard": "c++11",
             "intelliSenseMode": "linux-gcc-arm",
@@ -16,8 +15,7 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${env:PICO_SDK_PATH}/**"
+                "${workspaceFolder}/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
