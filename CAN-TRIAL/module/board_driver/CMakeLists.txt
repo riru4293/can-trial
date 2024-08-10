@@ -9,19 +9,15 @@ project(${MOD_NAME} VERSION 1.0.0
 )
 
 add_library(${MOD_NAME} STATIC
-    src/board_driver.c
+    src/bd_api.c
     src/bd_gpio.c
 )
 
 target_compile_features(${MOD_NAME} PRIVATE cxx_std_11)
 
 target_include_directories(${MOD_NAME}
-    PUBLIC
-    public/include
-
     PRIVATE
     include
-    private/include
     ${COMMON_INCLUDE_DIRECTORY}
 )
 
