@@ -21,8 +21,9 @@ add_compile_definitions($<$<CONFIG:Debug>:DEBUG=1>)
 set(ENV{PICO_SDK_PATH} "${CMAKE_SOURCE_DIR}/pico-sdk")
 
 # Set flags and directory variables
-set(FREERTOS_CFG_DIRECTORY "${CMAKE_SOURCE_DIR}/Config")
+set(FREERTOS_CFG_DIRECTORY "${CMAKE_SOURCE_DIR}/FreeRTOS-Config")
 set(FREERTOS_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/FreeRTOS-Kernel")
+set(COMMON_INCLUDE_DIRECTORY "${CMAKE_SOURCE_DIR}/${APP_NAME}/include")
 
 # Include the Pico SDK
 include(pico_sdk_import.cmake)
@@ -35,6 +36,7 @@ project(${PROJECT_NAME}
 
 # Initialise the Pico SDK
 pico_sdk_init()
+
 
 # Add FreeRTOS as a library
 add_library(FreeRTOS STATIC
