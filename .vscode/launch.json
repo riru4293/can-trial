@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Pico Debug (Linux)",
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/appl-01",
             "executable": "${command:cmake.launchTargetPath}",
             "request": "launch",
             "type": "cortex-debug",
