@@ -10,9 +10,9 @@
 
 
 // FreeRTOS
-// #include <FreeRTOS.h>
-// #include <task.h>
-// #include <queue.h>
+#include <FreeRTOS.h>
+#include <task.h>
+#include <queue.h>
 // C
 // #include <stdbool.h>
 // #include <stdlib.h>
@@ -24,7 +24,9 @@
 // #include "pico/binary_info.h"
 
 
-VOID temp_exec( VOID );
+VOID temp_init( VOID );
+VOID temp_task(VOID* unused_arg);
+QueueHandle_t get_queue( VOID );
 
 
 #endif      // MAIN_H

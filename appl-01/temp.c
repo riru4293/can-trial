@@ -1,6 +1,8 @@
 #include "appl_common.h"
 #include "main.h"
 #include "hardware/spi.h"
+#include <string.h>
+#include "logger/include/public/logger_api.h"
 
 #define SPI_BAUDRATE_10MHZ ( (UCHAR)10000000U ) /* 10MHz */
 #define GPIO_NUM_SPI_1_MISO             ( (UCHAR) 4U )
@@ -198,10 +200,13 @@ static UCHAR canstat = 0x00U;
 static UCHAR canintf = 0x00U;
 static UCHAR txb0ctrl = 0x00U;
 
-VOID temp_exec( VOID )
-{
-    UCHAR i;
+static UCHAR bus_stat = 0U;
+static UCHAR msg_bus_off[]     = "Bus-off";
+static UCHAR msg_err_passive[] = "Err-psv";
+static UCHAR msg_err_active[]  = "Err-act";
 
+VOID temp_init( VOID )
+{
     /* Initialize SPI. */
     (VOID)spi_init( spi0, SPI_BAUDRATE_10MHZ );
 
@@ -262,27 +267,60 @@ VOID temp_exec( VOID )
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
     write_spi( SPICMD_REQ_TX0 );
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+}
 
-    while(1) {
+VOID temp_task(VOID* unused_arg) {
+
+    while ( TRUE ) {
         eflg = read_reg( REG_EFLG );
         tec = read_reg( REG_TEC );
         canstat = read_reg( REG_CANSTAT );
         canintf = read_reg( REG_CANINTF );
         txb0ctrl = read_reg( REG_TXB0CTRL );
         
-        printf( "EFLG: %x, TEC:%x, CANSTAT:%x, CANINTF:%x, TXB0CTRL:%x\n", eflg, tec, canstat, canintf, txb0ctrl );
+        // printf( "EFLG: %x, TEC:%x, CANSTAT:%x, CANINTF:%x, TXB0CTRL:%x\n", eflg, tec, canstat, canintf, txb0ctrl );
 
         // 送信済みの場合
         if( 0 == ( txb0ctrl & 0x08 ) )
         {
             /* Request to send. */
-            printf("Request to send.");
+            // printf("Request to send.");
             write_reg( REG_CANINTF, 0x00U );
-            printf(" CANINTF: %x\n", read_reg( REG_CANINTF ) );
+            // printf(" CANINTF: %x\n", read_reg( REG_CANINTF ) );
             gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
             write_spi( SPICMD_REQ_TX0 );
             gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
         }
+
+        if( 0 < ( eflg & 0x20 ) )
+        {
+            // Bus-off
+            if( 3U != bus_stat )
+            {
+                bus_stat = 3U;
+                (VOID)lg_put_msg( sizeof( msg_bus_off ), msg_bus_off );
+            }
+        }
+        else if( 0 < ( eflg & 0x18 ) )
+        {
+            // Error-passive
+            if( 2U != bus_stat )
+            {
+                bus_stat = 2U;
+                (VOID)lg_put_msg( sizeof( msg_err_passive ), msg_err_passive );
+            }
+        }
+        else
+        {
+            // Error-active
+            if( 1U != bus_stat )
+            {
+                bus_stat = 1U;
+                (VOID)lg_put_msg( sizeof( msg_err_active ), msg_err_active );
+            }
+        }
+
+        vTaskDelay(100);
     }
 }
 

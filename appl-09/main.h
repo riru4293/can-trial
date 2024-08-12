@@ -24,7 +24,7 @@
 // #include "pico/binary_info.h"
 
 
-VOID temp_exec( VOID );
+VOID temp_init( VOID );
 
 
 #endif      // MAIN_H

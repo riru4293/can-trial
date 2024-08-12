@@ -6,6 +6,7 @@ add_compile_definitions(APP_VERSION="${APP_01_VERSION_NUMBER}")
 
 
 add_subdirectory( module/board_driver )
+add_subdirectory( module/logger )
 
 
 # Include app source code file(s)
@@ -19,6 +20,7 @@ target_link_libraries(${APP_01_NAME}
     PRIVATE pico_stdlib
     PRIVATE FreeRTOS
     PRIVATE board_driver
+    PRIVATE logger
     # can_driver
     # spi_wrapper
     PRIVATE hardware_spi

@@ -37,7 +37,7 @@ int main()
         printf("App: %s %s.\n", APP_NAME, APP_VERSION);
     }
 
-    temp_exec();
+    temp_init();
 
     // We should never get here, but just in case...
     while(true) {

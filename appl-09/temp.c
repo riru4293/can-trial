@@ -198,7 +198,7 @@ static UCHAR canstat[10] = { 0U };
 static UCHAR canintf[10] = { 0U };
 static UCHAR txb0ctrl[10] = { 0U };
 
-VOID temp_exec( VOID )
+VOID temp_init( VOID )
 {
     UCHAR i;
 

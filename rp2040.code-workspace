@@ -6,7 +6,10 @@
     ],
 	"settings": {
 		"files.associations": {
-			"appl_common.h": "c"
-		}
+			"appl_common.h": "c",
+			"main.h": "c",
+			"board_driver_api.h": "c"
+		},
+		"cortex-debug.variableUseNaturalFormat": false
 	}
 }
