@@ -4,6 +4,9 @@
 #include "pico/stdlib.h"
 
 typedef uint8_t UCHAR;
+typedef uint16_t USHORT;
+typedef uint32_t UINT;
+typedef uint64_t ULONG;
 typedef bool BOOL;
 typedef void VOID;
 

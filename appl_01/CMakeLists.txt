@@ -4,10 +4,8 @@ cmake_minimum_required(VERSION 3.14)
 add_compile_definitions(APP_NAME="${APP_01_NAME}")
 add_compile_definitions(APP_VERSION="${APP_01_VERSION_NUMBER}")
 
-
-add_subdirectory( module/board_driver )
+add_subdirectory( module/driver )
 add_subdirectory( module/logger )
-
 
 # Include app source code file(s)
 add_executable(${APP_01_NAME}
@@ -17,13 +15,14 @@ add_executable(${APP_01_NAME}
 
 # Link to built libraries
 target_link_libraries(${APP_01_NAME}
+    # PICO_SDK
     PRIVATE pico_stdlib
-    PRIVATE FreeRTOS
-    PRIVATE board_driver
-    PRIVATE logger
-    # can_driver
-    # spi_wrapper
     PRIVATE hardware_spi
+    # FreeRTOS
+    PRIVATE FreeRTOS
+    # modules
+    PRIVATE driver
+    PRIVATE logger
 )
 
 target_include_directories(${APP_01_NAME}

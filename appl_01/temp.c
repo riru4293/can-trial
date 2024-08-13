@@ -1,8 +1,10 @@
 #include "appl_common.h"
 #include "main.h"
 #include "hardware/spi.h"
+// #include <string.h>
+#include "logger/include/public/logger_api.h"
 
-#define SPI_BAUDRATE_10MHZ ( (UCHAR)10000000U ) /* 10MHz */
+
 #define GPIO_NUM_SPI_1_MISO             ( (UCHAR) 4U )
 #define GPIO_NUM_SPI_1_CS               ( (UCHAR) 5U )
 #define GPIO_NUM_SPI_1_SCK              ( (UCHAR) 6U )
@@ -188,17 +190,23 @@ static VOID write_reg( const UCHAR addr, const UCHAR val );
 static UCHAR read_reg( const UCHAR addr );
 
 static const UCHAR BAUDRATE[ BAUDRATE_NUMOF_ITEMS ] = { 0x02U, 0x89U, 0x07U }; /* CNF3,CNF2,CNF1 */
-static UCHAR txhdr[ 5 ] = { 0x444U >> 3U, (0x444U << 5U) & 0xE0U, 0x00U, 0x00U, 0x08U };
-static UCHAR txbdy[ 8 ] = { 0x99U, 0x88U, 0x77U, 0x66U, 0x55U, 0x44U, 0x33U, 0x22U };
+static UCHAR txhdr[ 5 ] = { 0x477U >> 3U, (0x477U << 5U) & 0xE0U, 0x00U, 0x00U, 0x08U };
+static UCHAR txbdy[ 8 ] = { 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U, 0x77U, 0x88U };
 
 static UCHAR tmp_buf[ 8 ] = { 0U };
+static UCHAR eflg = 0x00U;
+static UCHAR tec = 0x00U;
+static UCHAR canstat = 0x00U;
+static UCHAR canintf = 0x00U;
 static UCHAR txb0ctrl = 0x00U;
+
+static UCHAR bus_stat = 0U;
+static UCHAR msg_bus_off[]     = "Bus-off";
+static UCHAR msg_err_passive[] = "Err-psv";
+static UCHAR msg_err_active[]  = "Err-act";
 
 VOID temp_init( VOID )
 {
-    /* Initialize SPI. */
-    (VOID)spi_init( spi0, SPI_BAUDRATE_10MHZ );
-
     /* MCP2515リセット。コンフィグレーションモード */
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
     write_spi( SPICMD_RESET );
@@ -218,6 +226,10 @@ VOID temp_init( VOID )
     /* 受信バッファ２設定。フィルタ一致のみ受信。 */
     write_reg( REG_RXB1CTRL, 0x00 );
 
+    printf("EFLG: %x, TEC:%x, CANSTAT:%x, CANINTF:%x, TXB0CTRL:%x\n--\n",
+            read_reg( REG_EFLG ), read_reg( REG_TEC ), read_reg( REG_CANSTAT )
+          , read_reg( REG_CANINTF ), read_reg( REG_TXB0CTRL ));
+
     /* ノーマルモード */
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
     write_spi( SPICMD_MODBITS_REG );
@@ -226,6 +238,9 @@ VOID temp_init( VOID )
     write_spi( OPMODE_NORMAL );
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
     sleep_ms(100); // 適当なwait
+
+    printf("CNF1: %x, CNF2:%x, CNF3:%x\n--\n",
+            read_reg( REG_CNF1 ), read_reg( REG_CNF2 ), read_reg( REG_CNF3 ));
 
     /* Set Send Message */
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
@@ -249,12 +264,21 @@ VOID temp_init( VOID )
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
     write_spi( SPICMD_REQ_TX0 );
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+}
 
-    while(1) {
-        /* Clear interruption by received. */
-        write_reg( REG_CANINTF, 0x00U );
+VOID temp_task(VOID* unused_arg) {
 
+    while ( TRUE ) {
+        
+        vTaskSuspendAll();
+        eflg = read_reg( REG_EFLG );
+        tec = read_reg( REG_TEC );
+        canstat = read_reg( REG_CANSTAT );
+        canintf = read_reg( REG_CANINTF );
         txb0ctrl = read_reg( REG_TXB0CTRL );
+        (VOID)xTaskResumeAll();
+        
+        // // printf( "EFLG: %x, TEC:%x, CANSTAT:%x, CANINTF:%x, TXB0CTRL:%x\n", eflg, tec, canstat, canintf, txb0ctrl );
 
         // 送信済みの場合
         if( 0 == ( txb0ctrl & 0x08 ) )
@@ -268,22 +292,46 @@ VOID temp_init( VOID )
             gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
         }
 
-        sleep_ms(100);
+        if( 0 < ( eflg & 0x20 ) )
+        {
+            // Bus-off
+            if( 3U != bus_stat )
+            {
+                bus_stat = 3U;
+                (VOID)lg_put_msg( sizeof( msg_bus_off ), msg_bus_off );
+            }
+        }
+        else if( 0 < ( eflg & 0x18 ) )
+        {
+            // Error-passive
+            if( 2U != bus_stat )
+            {
+                bus_stat = 2U;
+                (VOID)lg_put_msg( sizeof( msg_err_passive ), msg_err_passive );
+            }
+        }
+        else
+        {
+            // Error-active
+            if( 1U != bus_stat )
+            {
+                bus_stat = 1U;
+                (VOID)lg_put_msg( sizeof( msg_err_active ), msg_err_active );
+            }
+        }
+
+        vTaskDelay(100);
     }
 }
 
 static VOID read_array_spi( const size_t n, UCHAR *buf )
 {
-    // gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
     (VOID)spi_read_blocking( spi0, SPI_REPEATED_TX_DATA, buf, n );
-    // gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
 }
 
 static VOID write_array_spi( const size_t n, const UCHAR const *buf )
 {
-    // gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
     (VOID)spi_write_blocking( spi0, buf, n );
-    // gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
 }
 
 static VOID write_spi( const UCHAR val )

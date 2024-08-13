@@ -26,7 +26,6 @@
 
 VOID temp_init( VOID );
 VOID temp_task(VOID* unused_arg);
-QueueHandle_t get_queue( VOID );
 
 
 #endif      // MAIN_H

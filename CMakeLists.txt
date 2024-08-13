@@ -4,15 +4,15 @@ cmake_minimum_required(VERSION 3.14)
 set(PROJECT_NAME "CAN-TRIAL_PROJECT")
 
 # Set app name(s) and version(s)
-set(APP_01_NAME "appl-01")
+set(APP_01_NAME "appl_01")
 set(APP_01_VERSION_NUMBER "0.0.2")
 
-set(APP_09_NAME "appl-09")
+set(APP_09_NAME "appl_09")
 set(APP_09_VERSION_NUMBER "0.0.1")
 
 # Specify the app(s) source code
-set(APP_01_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/appl-01")
-set(APP_09_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/appl-09")
+set(APP_01_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/appl_01")
+set(APP_09_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/appl_09")
 
 # FROM 1.4.2 -- Set app-side debugging on debug builds
 # Now uses CMake generator expression to extract config type

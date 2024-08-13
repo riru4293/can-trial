@@ -1,35 +1,38 @@
-#include "appl_common.h"
-#include "private/bd_gpio.h"
+#include "hardware/spi.h"
+#include "private/rp2040.h"
+
 
 #define GPIO_NUM_SPI_1_MISO             ( (UCHAR) 4U )
 #define GPIO_NUM_SPI_1_CS               ( (UCHAR) 5U )
 #define GPIO_NUM_SPI_1_SCK              ( (UCHAR) 6U )
 #define GPIO_NUM_SPI_1_MOSI             ( (UCHAR) 7U )
-
 #define GPIO_NUM_CAN_INTERRUPTION       ( (UCHAR)22U )
-
 #define GPIO_NUM_INTERNAL_LED           ( (UCHAR)25U )
 
-static VOID bd_init_gpio_internal_led( VOID );
-static VOID bd_init_gpio_spi_1( VOID );
+#define SPI_BAUDRATE_10MHZ              ( (UINT)10000000UL ) /* 10MHz */
 
 
-VOID bd_init_gpio( VOID )
+drv_result_t init_stdio( VOID )
 {
-    bd_init_gpio_internal_led();
-    bd_init_gpio_spi_1();
+    BOOL result;
+
+    result = stdio_init_all();
+
+    return ( TRUE == result ) ? DRV_SUCCESS : DRV_FAILURE;
 }
 
 
-static VOID bd_init_gpio_internal_led( VOID )
+VOID init_led( VOID )
 {
     gpio_init(GPIO_NUM_INTERNAL_LED);
     gpio_set_dir(GPIO_NUM_INTERNAL_LED, GPIO_OUT);
 }
 
 
-static VOID bd_init_gpio_spi_1( VOID )
+VOID init_spi( VOID )
 {
+    (VOID)spi_init( spi0, SPI_BAUDRATE_10MHZ );
+
     gpio_set_function( GPIO_NUM_SPI_1_MISO, GPIO_FUNC_SPI );
     gpio_set_function( GPIO_NUM_SPI_1_MOSI, GPIO_FUNC_SPI );
     gpio_set_function( GPIO_NUM_SPI_1_SCK,  GPIO_FUNC_SPI );
@@ -38,3 +41,13 @@ static VOID bd_init_gpio_spi_1( VOID )
 }
 
 
+VOID turn_on_led( VOID )
+{
+    gpio_put( PICO_DEFAULT_LED_PIN, GPIO_VOLT_HIGH );
+}
+
+
+VOID turn_off_led( VOID )
+{
+    gpio_put( PICO_DEFAULT_LED_PIN, GPIO_VOLT_LOW );
+}

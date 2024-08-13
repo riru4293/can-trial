@@ -8,7 +8,8 @@
 		"files.associations": {
 			"appl_common.h": "c",
 			"main.h": "c",
-			"board_driver_api.h": "c"
+			"board_driver_api.h": "c",
+			"logger_api.h": "c"
 		},
 		"cortex-debug.variableUseNaturalFormat": false
 	}

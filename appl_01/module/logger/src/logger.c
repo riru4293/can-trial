@@ -2,6 +2,8 @@
 #include <FreeRTOS.h>
 // #include <task.h>
 #include <queue.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "public/logger_api.h"
 
@@ -19,13 +21,13 @@ VOID lg_logger_task( VOID* unused_arg )
 
     while( TRUE )
     {
-        // Get a log message. When not cause timeout.
-        result = xQueueReceive( queue, tmp_msg, portMAX_DELAY );
+        // // Get a log message. When not cause timeout.
+        // result = xQueueReceive( queue, tmp_msg, portMAX_DELAY );
 
-        if ( pdPASS == result )
-        {
-            printf("%s\n", tmp_msg );
-        }
+        // if ( pdPASS == result )
+        // {
+        //     printf("%s\n", tmp_msg );
+        // }
     }
 }
 
@@ -34,21 +36,22 @@ lg_result_t lg_init( VOID )
     queue = xQueueCreate( LG_MAXOF_MSG_LEN, MAXOF_QUEUE_ITEMS );
 
     return ( NULL != queue ) ? LG_SUCCESS : LG_FAILURE;
+    // return LG_SUCCESS;
 }
 
 
 lg_result_t lg_put_msg( const UCHAR n, const UCHAR* msg )
 {
     BaseType_t result = pdFAIL;
-    UCHAR tmp_msg[ SIZEOF_MSG_BUFF ] = { 0U };
+    // UCHAR tmp_msg[ SIZEOF_MSG_BUFF ] = { 0U };
 
-    if( ( LG_MINOF_MSG_LEN <= n ) && ( LG_MAXOF_MSG_LEN >= n ) )
-    {
-        // Set NULL to last character
-        memcpy( tmp_msg, msg, n );
+    // if( ( LG_MINOF_MSG_LEN <= n ) && ( LG_MAXOF_MSG_LEN >= n ) )
+    // {
+    //     // Set NULL to last character
+    //     memcpy( tmp_msg, msg, n );
 
-        result = xQueueSendToBack( queue, tmp_msg, WAITOF_QUEUE_SET );
-    }
+    //     result = xQueueSendToBack( queue, tmp_msg, WAITOF_QUEUE_SET );
+    // }
 
     return ( pdPASS == result ) ? LG_SUCCESS : LG_FAILURE;
 }
