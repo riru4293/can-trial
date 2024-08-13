@@ -9,7 +9,8 @@
 #define GPIO_NUM_CAN_INTERRUPTION       ( (UCHAR)22U )
 #define GPIO_NUM_INTERNAL_LED           ( (UCHAR)25U )
 
-#define SPI_BAUDRATE_10MHZ              ( (UINT)10000000UL ) /* 10MHz */
+#define SPI_BAUDRATE_10MHZ              ( (UINT)10000000U ) /* 10MHz */
+#define SPI_REPEATED_TX_DATA            ( (UCHAR)0U )
 
 
 drv_result_t init_stdio( VOID )
@@ -50,4 +51,27 @@ VOID turn_on_led( VOID )
 VOID turn_off_led( VOID )
 {
     gpio_put( PICO_DEFAULT_LED_PIN, GPIO_VOLT_LOW );
+}
+
+VOID begin_spi( VOID )
+{
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
+}
+
+
+VOID end_spi( VOID )
+{
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+}
+
+
+VOID read_array_spi( const size_t n, UCHAR *buf )
+{
+    (VOID)spi_read_blocking( spi0, SPI_REPEATED_TX_DATA, buf, n );
+}
+
+
+VOID write_array_spi( const size_t n, const UCHAR const *buf )
+{
+    (VOID)spi_write_blocking( spi0, buf, n );
 }

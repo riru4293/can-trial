@@ -1,15 +1,16 @@
+#include "hardware/spi.h"
 #include "appl_common.h"
 #include "main.h"
-#include "hardware/spi.h"
 // #include <string.h>
+#include "driver/include/public/driver.h"
 #include "logger/include/public/logger_api.h"
 
 
-#define GPIO_NUM_SPI_1_MISO             ( (UCHAR) 4U )
-#define GPIO_NUM_SPI_1_CS               ( (UCHAR) 5U )
-#define GPIO_NUM_SPI_1_SCK              ( (UCHAR) 6U )
-#define GPIO_NUM_SPI_1_MOSI             ( (UCHAR) 7U )
-#define SPI_REPEATED_TX_DATA         ( (UCHAR)0U )
+#define GPIO_NUM_SPI_1_MISO             ( (UCHAR)4U )
+#define GPIO_NUM_SPI_1_CS               ( (UCHAR)5U )
+#define GPIO_NUM_SPI_1_SCK              ( (UCHAR)6U )
+#define GPIO_NUM_SPI_1_MOSI             ( (UCHAR)7U )
+#define SPI_REPEATED_TX_DATA            ( (UCHAR)0U )
 
 #define SPICMD_WRITE_REG                ( 0x02U )
 #define SPICMD_READ_REG                 ( 0x03U )
@@ -43,7 +44,7 @@
 #define REG_RXF2SIDL                    ( 0x09U )
 #define REG_RXF2EID8                    ( 0x0AU )
 #define REG_RXF2EID0                    ( 0x0BU )
-#define REG_BFPCTRL ( 0x0CU )
+#define REG_BFPCTRL                     ( 0x0CU )
 #define REG_TXRTSCTRL                   ( 0x0DU )
 #define REG_CANSTAT                     ( 0x0EU )
 #define REG_CANCTRL                     ( 0x0FU )
@@ -183,9 +184,7 @@
 #define OPMODE_NORMAL       ( 0x00U )
 #define BAUDRATE_NUMOF_ITEMS    ( 3 )
 
-static VOID read_array_spi( const size_t n, UCHAR *buf );
-static VOID write_array_spi( const size_t n, const UCHAR const *buf );
-static VOID write_spi( const UCHAR val );
+
 static VOID write_reg( const UCHAR addr, const UCHAR val );
 static UCHAR read_reg( const UCHAR addr );
 
@@ -208,17 +207,17 @@ static UCHAR msg_err_active[]  = "Err-act";
 VOID temp_init( VOID )
 {
     /* MCP2515リセット。コンフィグレーションモード */
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-    write_spi( SPICMD_RESET );
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+    drv_begin_spi();
+    drv_write_spi( SPICMD_RESET );
+    drv_end_spi();
     sleep_ms(100); // 適当なwait
 
     /* MCP2515ボーレート設定 */
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-    write_spi( SPICMD_WRITE_REG );
-    write_spi( REG_CNF3 );
-    write_array_spi( BAUDRATE_NUMOF_ITEMS, BAUDRATE );
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+    drv_begin_spi();
+    drv_write_spi( SPICMD_WRITE_REG );
+    drv_write_spi( REG_CNF3 );
+    drv_write_array_spi( BAUDRATE_NUMOF_ITEMS, BAUDRATE );
+    drv_end_spi();
 
     /* 受信バッファ１設定。すべて受信。RX1への切り替え禁止。 */
     write_reg( REG_RXB0CTRL, 0x60 );
@@ -231,39 +230,39 @@ VOID temp_init( VOID )
           , read_reg( REG_CANINTF ), read_reg( REG_TXB0CTRL ));
 
     /* ノーマルモード */
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-    write_spi( SPICMD_MODBITS_REG );
-    write_spi( REG_CANCTRL );
-    write_spi( MASKOF_OPMOD );
-    write_spi( OPMODE_NORMAL );
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+    drv_begin_spi();
+    drv_write_spi( SPICMD_MODBITS_REG );
+    drv_write_spi( REG_CANCTRL );
+    drv_write_spi( MASKOF_OPMOD );
+    drv_write_spi( OPMODE_NORMAL );
+    drv_end_spi();
     sleep_ms(100); // 適当なwait
 
     printf("CNF1: %x, CNF2:%x, CNF3:%x\n--\n",
             read_reg( REG_CNF1 ), read_reg( REG_CNF2 ), read_reg( REG_CNF3 ));
 
     /* Set Send Message */
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-    write_spi( SPICMD_WRITE_TX0_CONTENT );
-    write_array_spi( 8U/*DLC*/, txbdy );
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+    drv_begin_spi();
+    drv_write_spi( SPICMD_WRITE_TX0_CONTENT );
+    drv_write_array_spi( 8U/*DLC*/, txbdy );
+    drv_end_spi();
 
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-    write_spi( SPICMD_READ_REG );
-    write_spi( REG_TXB0D0 );
-    read_array_spi( 8U, tmp_buf );
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+    drv_begin_spi();
+    drv_write_spi( SPICMD_READ_REG );
+    drv_write_spi( REG_TXB0D0 );
+    drv_read_array_spi( 8U, tmp_buf );
+    drv_end_spi();
 
     /* Set Send CAN ID, DLC */
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-    write_spi( SPICMD_WRITE_TX0_ID );
-    write_array_spi( 5U/*Header Size*/, txhdr );
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+    drv_begin_spi();
+    drv_write_spi( SPICMD_WRITE_TX0_ID );
+    drv_write_array_spi( 5U/*Header Size*/, txhdr );
+    drv_end_spi();
 
     /* Request to send. */
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-    write_spi( SPICMD_REQ_TX0 );
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+    drv_begin_spi();
+    drv_write_spi( SPICMD_REQ_TX0 );
+    drv_end_spi();
 }
 
 VOID temp_task(VOID* unused_arg) {
@@ -287,9 +286,9 @@ VOID temp_task(VOID* unused_arg) {
             // printf("Request to send.");
             write_reg( REG_CANINTF, 0x00U );
             // printf(" CANINTF: %x\n", read_reg( REG_CANINTF ) );
-            gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-            write_spi( SPICMD_REQ_TX0 );
-            gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+            drv_begin_spi();
+            drv_write_spi( SPICMD_REQ_TX0 );
+            drv_end_spi();
         }
 
         if( 0 < ( eflg & 0x20 ) )
@@ -324,35 +323,21 @@ VOID temp_task(VOID* unused_arg) {
     }
 }
 
-static VOID read_array_spi( const size_t n, UCHAR *buf )
-{
-    (VOID)spi_read_blocking( spi0, SPI_REPEATED_TX_DATA, buf, n );
-}
-
-static VOID write_array_spi( const size_t n, const UCHAR const *buf )
-{
-    (VOID)spi_write_blocking( spi0, buf, n );
-}
-
-static VOID write_spi( const UCHAR val )
-{
-    write_array_spi( sizeof( UCHAR ), &val );
-}
 
 static VOID write_reg( const UCHAR addr, const UCHAR val ) {
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-    write_spi( SPICMD_WRITE_REG );
-    write_spi( addr );
-    write_spi( val );
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+    drv_begin_spi();
+    drv_write_spi( SPICMD_WRITE_REG );
+    drv_write_spi( addr );
+    drv_write_spi( val );
+    drv_end_spi();
 }
 
 static UCHAR read_reg( const UCHAR addr ) {
     UCHAR val;
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-    write_spi( SPICMD_READ_REG );
-    write_spi( addr );
-    read_array_spi( sizeof( val ), &val );
-    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+    drv_begin_spi();
+    drv_write_spi( SPICMD_READ_REG );
+    drv_write_spi( addr );
+    drv_read_array_spi( sizeof( val ), &val );
+    drv_end_spi();
     return val;
 }
