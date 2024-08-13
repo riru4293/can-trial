@@ -3,7 +3,7 @@
 #include "main.h"
 // #include <string.h>
 #include "driver/include/public/driver.h"
-#include "logger/include/public/logger_api.h"
+#include "logger/include/public/logger.h"
 
 
 #define GPIO_NUM_SPI_1_MISO             ( (UCHAR)4U )
@@ -260,7 +260,7 @@ VOID temp_task(VOID* unused_arg) {
             if( 3U != bus_stat )
             {
                 bus_stat = 3U;
-                (VOID)lg_put_msg( sizeof( msg_bus_off ), msg_bus_off );
+                (VOID)log_put_msg( sizeof( msg_bus_off ), msg_bus_off );
             }
         }
         else if( 0 < ( eflg & 0x18 ) )
@@ -269,7 +269,7 @@ VOID temp_task(VOID* unused_arg) {
             if( 2U != bus_stat )
             {
                 bus_stat = 2U;
-                (VOID)lg_put_msg( sizeof( msg_err_passive ), msg_err_passive );
+                (VOID)log_put_msg( sizeof( msg_err_passive ), msg_err_passive );
             }
         }
         else
@@ -278,7 +278,7 @@ VOID temp_task(VOID* unused_arg) {
             if( 1U != bus_stat )
             {
                 bus_stat = 1U;
-                (VOID)lg_put_msg( sizeof( msg_err_active ), msg_err_active );
+                (VOID)log_put_msg( sizeof( msg_err_active ), msg_err_active );
             }
         }
 

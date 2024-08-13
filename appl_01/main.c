@@ -7,14 +7,12 @@
  */
 #include "appl_common.h"
 #include "driver/include/public/driver.h"
-#include "logger/include/public/logger_api.h"
+#include "logger/include/public/logger.h"
 #include "main.h"
 
 /*
  * GLOBALS
  */
-TaskHandle_t temp_task_handle = NULL;
-TaskHandle_t logger_task_handle = NULL;
 
 /*
  * FUNCTIONS
@@ -27,7 +25,6 @@ TaskHandle_t logger_task_handle = NULL;
 int main()
 {
     drv_result_t result;
-    lg_result_t result_lg_init;
 
     result = drv_init();
 
@@ -39,10 +36,9 @@ int main()
     }
 
     temp_init();
-    result_lg_init = lg_init();
 
-    xTaskCreate(temp_task, "TEMP_TASK", 1288, NULL, 5, &temp_task_handle);
-    xTaskCreate(lg_logger_task, "LOGGER_TASK", 1288, NULL, 1, &logger_task_handle);
+    xTaskCreate(temp_task, "TEMP_TASK", 1288, NULL, 5, NULL);
+    log_create_task();
 
     vTaskStartScheduler();
     
