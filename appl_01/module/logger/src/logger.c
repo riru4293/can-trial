@@ -8,7 +8,7 @@
 
 #include "public/logger.h"
 
-#define MAXOF_QUEUE_ITEMS ( (UCHAR)100U )
+#define MAXOF_QUEUE_ITEMS ( (UCHAR)10U )
 #define SIZEOF_MSG_BUFF ( (UCHAR)( LOG_MAXOF_MSG_LEN + 1U ) )
 #define WAITOF_QUEUE_SET ( (UCHAR)0U )
 #define WAITOF_QUEUE_GET ( (UCHAR)0U )
@@ -35,9 +35,9 @@ static VOID task( VOID* unused_arg )
 
 log_result_t log_create_task( VOID )
 {
-    queue = xQueueCreate( LOG_MAXOF_MSG_LEN, MAXOF_QUEUE_ITEMS );
+    queue = xQueueCreate( SIZEOF_MSG_BUFF, MAXOF_QUEUE_ITEMS );
 
-    xTaskCreate( task, "LOGGER_TASK", 1024, NULL, 1, NULL );
+    xTaskCreate( task, "LOGGER_TASK", 1200, NULL, 1, NULL );
 
     return ( NULL != queue ) ? LOG_SUCCESS : LOG_FAILURE;
 }

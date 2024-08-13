@@ -37,7 +37,7 @@ int main()
 
     temp_init();
 
-    xTaskCreate(temp_task, "TEMP_TASK", 1288, NULL, 5, NULL);
+    xTaskCreate(temp_task, "TEMP_TASK", 1288, NULL, 2, NULL);
     log_create_task();
 
     vTaskStartScheduler();
