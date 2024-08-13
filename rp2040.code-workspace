@@ -9,7 +9,9 @@
 			"appl_common.h": "c",
 			"main.h": "c",
 			"board_driver_api.h": "c",
-			"logger_api.h": "c"
+			"logger_api.h": "c",
+			"spi.h": "c",
+			"rp2040.h": "c"
 		},
 		"cortex-debug.variableUseNaturalFormat": false
 	}

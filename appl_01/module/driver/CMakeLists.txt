@@ -11,6 +11,7 @@ project(${MOD_NAME} VERSION 1.0.0
 add_library(${MOD_NAME} STATIC
     src/driver.c
     src/rp2040.c
+    src/mcp2515.c
 )
 
 target_compile_features(${MOD_NAME} PRIVATE cxx_std_11)

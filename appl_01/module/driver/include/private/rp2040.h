@@ -14,5 +14,6 @@ VOID begin_spi( VOID );
 VOID end_spi( VOID );
 VOID read_array_spi( const size_t n, UCHAR *buf );
 VOID write_array_spi( const size_t n, const UCHAR const *buf );
+VOID write_spi( const UCHAR val );
 
 #endif /* RP2040_H */

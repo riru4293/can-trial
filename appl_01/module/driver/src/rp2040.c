@@ -75,3 +75,9 @@ VOID write_array_spi( const size_t n, const UCHAR const *buf )
 {
     (VOID)spi_write_blocking( spi0, buf, n );
 }
+
+
+VOID write_spi( const UCHAR val )
+{
+    write_array_spi( sizeof( UCHAR ), &val );
+}

@@ -1,14 +1,21 @@
 #include "public/driver.h"
 #include "private/rp2040.h"
+#include "private/mcp2515.h"
 
 
 drv_result_t drv_init( VOID )
 {
     drv_result_t result;
 
-    result = init_stdio();
     init_led();
     init_spi();
+
+    result = init_stdio();
+    
+    if( DRV_SUCCESS == result )
+    {
+        result = init_mcp2515();
+    }
 
     return result;
 }
@@ -52,5 +59,5 @@ VOID drv_write_array_spi( const size_t n, const UCHAR const *buf )
 
 VOID drv_write_spi( const UCHAR val )
 {
-    drv_write_array_spi( sizeof( UCHAR ), &val );
+    write_spi( val );
 }

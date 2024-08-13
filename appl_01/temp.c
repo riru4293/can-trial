@@ -182,13 +182,11 @@
 #define MASKOF_DLC                      ( 0x0FU )
 
 #define OPMODE_NORMAL       ( 0x00U )
-#define BAUDRATE_NUMOF_ITEMS    ( 3 )
 
 
 static VOID write_reg( const UCHAR addr, const UCHAR val );
 static UCHAR read_reg( const UCHAR addr );
 
-static const UCHAR BAUDRATE[ BAUDRATE_NUMOF_ITEMS ] = { 0x02U, 0x89U, 0x07U }; /* CNF3,CNF2,CNF1 */
 static UCHAR txhdr[ 5 ] = { 0x477U >> 3U, (0x477U << 5U) & 0xE0U, 0x00U, 0x00U, 0x08U };
 static UCHAR txbdy[ 8 ] = { 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U, 0x77U, 0x88U };
 
@@ -206,41 +204,6 @@ static UCHAR msg_err_active[]  = "Err-act";
 
 VOID temp_init( VOID )
 {
-    /* MCP2515リセット。コンフィグレーションモード */
-    drv_begin_spi();
-    drv_write_spi( SPICMD_RESET );
-    drv_end_spi();
-    sleep_ms(100); // 適当なwait
-
-    /* MCP2515ボーレート設定 */
-    drv_begin_spi();
-    drv_write_spi( SPICMD_WRITE_REG );
-    drv_write_spi( REG_CNF3 );
-    drv_write_array_spi( BAUDRATE_NUMOF_ITEMS, BAUDRATE );
-    drv_end_spi();
-
-    /* 受信バッファ１設定。すべて受信。RX1への切り替え禁止。 */
-    write_reg( REG_RXB0CTRL, 0x60 );
-
-    /* 受信バッファ２設定。フィルタ一致のみ受信。 */
-    write_reg( REG_RXB1CTRL, 0x00 );
-
-    printf("EFLG: %x, TEC:%x, CANSTAT:%x, CANINTF:%x, TXB0CTRL:%x\n--\n",
-            read_reg( REG_EFLG ), read_reg( REG_TEC ), read_reg( REG_CANSTAT )
-          , read_reg( REG_CANINTF ), read_reg( REG_TXB0CTRL ));
-
-    /* ノーマルモード */
-    drv_begin_spi();
-    drv_write_spi( SPICMD_MODBITS_REG );
-    drv_write_spi( REG_CANCTRL );
-    drv_write_spi( MASKOF_OPMOD );
-    drv_write_spi( OPMODE_NORMAL );
-    drv_end_spi();
-    sleep_ms(100); // 適当なwait
-
-    printf("CNF1: %x, CNF2:%x, CNF3:%x\n--\n",
-            read_reg( REG_CNF1 ), read_reg( REG_CNF2 ), read_reg( REG_CNF3 ));
-
     /* Set Send Message */
     drv_begin_spi();
     drv_write_spi( SPICMD_WRITE_TX0_CONTENT );
@@ -277,7 +240,7 @@ VOID temp_task(VOID* unused_arg) {
         txb0ctrl = read_reg( REG_TXB0CTRL );
         (VOID)xTaskResumeAll();
         
-        // // printf( "EFLG: %x, TEC:%x, CANSTAT:%x, CANINTF:%x, TXB0CTRL:%x\n", eflg, tec, canstat, canintf, txb0ctrl );
+        // printf( "EFLG: %x, TEC:%x, CANSTAT:%x, CANINTF:%x, TXB0CTRL:%x\n", eflg, tec, canstat, canintf, txb0ctrl );
 
         // 送信済みの場合
         if( 0 == ( txb0ctrl & 0x08 ) )
