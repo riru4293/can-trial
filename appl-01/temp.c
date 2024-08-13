@@ -272,11 +272,14 @@ VOID temp_init( VOID )
 VOID temp_task(VOID* unused_arg) {
 
     while ( TRUE ) {
+        
+        vTaskSuspendAll();
         eflg = read_reg( REG_EFLG );
         tec = read_reg( REG_TEC );
         canstat = read_reg( REG_CANSTAT );
         canintf = read_reg( REG_CANINTF );
         txb0ctrl = read_reg( REG_TXB0CTRL );
+        (VOID)xTaskResumeAll();
         
         // printf( "EFLG: %x, TEC:%x, CANSTAT:%x, CANINTF:%x, TXB0CTRL:%x\n", eflg, tec, canstat, canintf, txb0ctrl );
 

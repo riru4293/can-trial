@@ -188,20 +188,14 @@ static VOID write_reg( const UCHAR addr, const UCHAR val );
 static UCHAR read_reg( const UCHAR addr );
 
 static const UCHAR BAUDRATE[ BAUDRATE_NUMOF_ITEMS ] = { 0x02U, 0x89U, 0x07U }; /* CNF3,CNF2,CNF1 */
-static UCHAR txhdr[ 5 ] = { 0x477U >> 3U, (0x477U << 5U) & 0xE0U, 0x00U, 0x00U, 0x08U };
-static UCHAR txbdy[ 8 ] = { 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U, 0x77U, 0x88U };
+static UCHAR txhdr[ 5 ] = { 0x444U >> 3U, (0x444U << 5U) & 0xE0U, 0x00U, 0x00U, 0x08U };
+static UCHAR txbdy[ 8 ] = { 0x99U, 0x88U, 0x77U, 0x66U, 0x55U, 0x44U, 0x33U, 0x22U };
 
 static UCHAR tmp_buf[ 8 ] = { 0U };
-static UCHAR eflg[10] = { 0U };
-static UCHAR tec[10] = { 0U };
-static UCHAR canstat[10] = { 0U };
-static UCHAR canintf[10] = { 0U };
-static UCHAR txb0ctrl[10] = { 0U };
+static UCHAR txb0ctrl = 0x00U;
 
 VOID temp_init( VOID )
 {
-    UCHAR i;
-
     /* Initialize SPI. */
     (VOID)spi_init( spi0, SPI_BAUDRATE_10MHZ );
 
@@ -224,10 +218,6 @@ VOID temp_init( VOID )
     /* 受信バッファ２設定。フィルタ一致のみ受信。 */
     write_reg( REG_RXB1CTRL, 0x00 );
 
-    printf("EFLG: %x, TEC:%x, CANSTAT:%x, CANINTF:%x, TXB0CTRL:%x\n--\n",
-            read_reg( REG_EFLG ), read_reg( REG_TEC ), read_reg( REG_CANSTAT )
-          , read_reg( REG_CANINTF ), read_reg( REG_TXB0CTRL ));
-
     /* ノーマルモード */
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
     write_spi( SPICMD_MODBITS_REG );
@@ -237,9 +227,46 @@ VOID temp_init( VOID )
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
     sleep_ms(100); // 適当なwait
 
+    /* Set Send Message */
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
+    write_spi( SPICMD_WRITE_TX0_CONTENT );
+    write_array_spi( 8U/*DLC*/, txbdy );
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
+    write_spi( SPICMD_READ_REG );
+    write_spi( REG_TXB0D0 );
+    read_array_spi( 8U, tmp_buf );
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+
+    /* Set Send CAN ID, DLC */
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
+    write_spi( SPICMD_WRITE_TX0_ID );
+    write_array_spi( 5U/*Header Size*/, txhdr );
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+
+    /* Request to send. */
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
+    write_spi( SPICMD_REQ_TX0 );
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+
     while(1) {
         /* Clear interruption by received. */
         write_reg( REG_CANINTF, 0x00U );
+
+        txb0ctrl = read_reg( REG_TXB0CTRL );
+
+        // 送信済みの場合
+        if( 0 == ( txb0ctrl & 0x08 ) )
+        {
+            /* Request to send. */
+            // printf("Request to send.");
+            write_reg( REG_CANINTF, 0x00U );
+            // printf(" CANINTF: %x\n", read_reg( REG_CANINTF ) );
+            gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
+            write_spi( SPICMD_REQ_TX0 );
+            gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+        }
 
         sleep_ms(100);
     }
