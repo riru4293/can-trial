@@ -218,6 +218,8 @@ static UINT rcvcnt;
 static UINT cus;
 static UINT ius;
 
+TaskHandle_t handle_task_alrt = NULL;
+
 VOID temp_init( VOID )
 {
     /* Set Send Message */
@@ -337,6 +339,7 @@ VOID temp_task2(VOID* unused_arg) {
             }
 
             modify_reg( REG_CANINTF, 0x01, 0x00 );
+            enable_irq( TRUE );
         }
 
         (VOID)xTaskResumeAll();
@@ -404,4 +407,74 @@ static void modify_reg( const UCHAR addr, const UCHAR mask, const UCHAR val ) {
     drv_write_spi( val );
 
     drv_end_spi();
+}
+
+// 割り込みハンドラ。タスクコールするだけ。
+VOID gpio_isr(uint gpio, uint32_t events) {
+    enable_irq( FALSE );
+    
+    static BaseType_t higher_priority_task_woken = pdFALSE;
+    vTaskNotifyGiveFromISR(handle_task_alrt, &higher_priority_task_woken);
+
+    // Exit to context switch if necessary
+    portYIELD_FROM_ISR(higher_priority_task_woken);
+}
+
+VOID enable_irq(BOOL state) {
+
+    gpio_set_irq_enabled_with_callback(21U,
+                                       GPIO_IRQ_LEVEL_LOW,
+                                       state,
+                                       &gpio_isr);
+}
+
+VOID temp_task3(VOID* unused_arg)
+{
+    base_tick = xTaskGetTickCount();
+
+    gpio_init(21U);
+    gpio_set_dir(21U, GPIO_IN);
+    gpio_pull_up(21U);
+    write_reg( REG_CANINTE, 0x01U );
+
+
+    while( TRUE )
+    {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+
+        // 受信しょり
+        {
+            vTaskSuspendAll();
+
+            /* Read CAN header from register. */
+            drv_begin_spi();
+            drv_write_spi( SPICMD_READ_RX0_HDR );
+            drv_read_array_spi( 5U, rxhdr );
+            drv_end_spi();
+
+            (VOID)xTaskResumeAll();
+
+            rxid = build_std_canid( rxhdr );
+
+            current_tick = xTaskGetTickCount();
+
+            if( base_tick <= current_tick )
+            {
+                tickdiff = current_tick - base_tick;
+            }
+            else{
+                tickdiff = 0xFFFF - base_tick + current_tick + 1U;
+            }
+
+            sprintf( mbuf, "CAN 0x%x(%d)", rxid, tickdiff );
+            log_put_msg( 30, mbuf );
+
+            base_tick = current_tick;
+            tickdiff = 0U;
+
+            modify_reg( REG_CANINTF, 0x01, 0x00 );
+            enable_irq( TRUE );
+        }
+    }
 }

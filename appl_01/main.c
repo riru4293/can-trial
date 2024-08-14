@@ -13,6 +13,7 @@
 /*
  * GLOBALS
  */
+extern TaskHandle_t handle_task_alrt;
 
 /*
  * FUNCTIONS
@@ -38,8 +39,11 @@ int main()
     temp_init();
 
     xTaskCreate(temp_task, "TEMP_TASK", 1288, NULL, 2, NULL);
-    xTaskCreate(temp_task2, "TEMP_TASK2", 1288, NULL, 3, NULL);
+    // xTaskCreate(temp_task2, "TEMP_TASK2", 1288, NULL, 3, NULL);
+    xTaskCreate(temp_task3, "TEMP_TASK3", 1288, NULL, 3, &handle_task_alrt);
     log_create_task();
+
+    enable_irq( TRUE );
 
     vTaskStartScheduler();
     
