@@ -197,9 +197,6 @@ static UCHAR txbdy[ 8 ] = { 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U, 0x77U, 0x8
 
 static UCHAR tmp_buf[ 8 ] = { 0U };
 static UCHAR eflg = 0x00U;
-static UCHAR tec = 0x00U;
-static UCHAR canstat = 0x00U;
-static UCHAR canintf = 0x00U;
 static UCHAR txb0ctrl = 0x00U;
 
 static UCHAR bus_stat = 0U;
@@ -214,9 +211,6 @@ static UCHAR mbuf[30] = { 0 };
 static TickType_t base_tick;
 static TickType_t current_tick;
 static TickType_t tickdiff;
-static UINT rcvcnt;
-static UINT cus;
-static UINT ius;
 
 TaskHandle_t handle_task_alrt = NULL;
 
@@ -248,29 +242,31 @@ VOID temp_init( VOID )
 
 VOID temp_task(VOID* unused_arg) {
 
+    TickType_t xLastWakeTime;
+    const TickType_t xFrequency = 1000;
+    xLastWakeTime = xTaskGetTickCount();//初期値のセット
+
     while ( TRUE ) {
+
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
         
         vTaskSuspendAll();
+
         eflg = read_reg( REG_EFLG );
-        tec = read_reg( REG_TEC );
-        canstat = read_reg( REG_CANSTAT );
-        canintf = read_reg( REG_CANINTF );
         txb0ctrl = read_reg( REG_TXB0CTRL );
-        (VOID)xTaskResumeAll();
-        
-        // printf( "EFLG: %x, TEC:%x, CANSTAT:%x, CANINTF:%x, TXB0CTRL:%x\n", eflg, tec, canstat, canintf, txb0ctrl );
 
         // 送信済みの場合
         if( 0 == ( txb0ctrl & 0x08 ) )
         {
             /* Request to send. */
-            // printf("Request to send.");
-            write_reg( REG_CANINTF, 0x00U );
-            // printf(" CANINTF: %x\n", read_reg( REG_CANINTF ) );
+            modify_reg( REG_CANINTF, 0x04U, 0x00U );
             drv_begin_spi();
             drv_write_spi( SPICMD_REQ_TX0 );
             drv_end_spi();
         }
+
+        (VOID)xTaskResumeAll();
+        
 
         if( 0 < ( eflg & 0x20 ) )
         {
@@ -298,74 +294,6 @@ VOID temp_task(VOID* unused_arg) {
                 bus_stat = 1U;
                 (VOID)log_put_msg( sizeof( msg_err_active ), msg_err_active );
             }
-        }
-
-        vTaskDelay(1000);
-    }
-}
-
-VOID temp_task2(VOID* unused_arg) {
-
-    UCHAR intf;
-    rcvcnt = 0U;
-    base_tick = xTaskGetTickCount();
-
-    TickType_t xLastWakeTime;
-    const TickType_t xFrequency = 100;
-    xLastWakeTime = xTaskGetTickCount();//初期値のセット
-    
-    while ( TRUE ) {
-        vTaskDelayUntil( &xLastWakeTime, xFrequency );
-
-        vTaskSuspendAll();
-        intf = read_reg( REG_CANINTF );
-
-        
-
-        // 受信済みの場合
-        if( 0 != ( intf & 0x01 ) )
-        {
-            rcvcnt++;
-
-            
-
-            if( 10U <= rcvcnt )
-            {
-                /* Read CAN header from register. */
-                drv_begin_spi();
-                drv_write_spi( SPICMD_READ_RX0_HDR );
-                drv_read_array_spi( 5U, rxhdr );
-                drv_end_spi();
-            }
-
-            modify_reg( REG_CANINTF, 0x01, 0x00 );
-            enable_irq( TRUE );
-        }
-
-        (VOID)xTaskResumeAll();
-
-        
-
-        if( 10U <= rcvcnt )
-        {
-            rxid = build_std_canid( rxhdr );
-
-            current_tick = xTaskGetTickCount();
-
-            if( base_tick <= current_tick )
-            {
-                tickdiff = current_tick - base_tick;
-            }
-            else{
-                tickdiff = 0xFFFF - base_tick + current_tick + 1U;
-            }
-
-            sprintf( mbuf, "CAN 0x%x (x%d), %d", rxid, rcvcnt, tickdiff );
-
-            log_put_msg( 30, mbuf );
-            base_tick = current_tick;
-            tickdiff = 0U;
-            rcvcnt = 0U;
         }
     }
 }
@@ -443,7 +371,7 @@ VOID temp_task3(VOID* unused_arg)
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
 
-        // 受信しょり
+        // 受信しょりBy割り込み
         {
             vTaskSuspendAll();
 
