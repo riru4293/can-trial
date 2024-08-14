@@ -35,7 +35,7 @@ static VOID task( VOID* unused_arg )
 
 log_result_t log_create_task( VOID )
 {
-    queue = xQueueCreate( SIZEOF_MSG_BUFF, MAXOF_QUEUE_ITEMS );
+    queue = xQueueCreate( MAXOF_QUEUE_ITEMS, SIZEOF_MSG_BUFF );
 
     xTaskCreate( task, "LOGGER_TASK", 1200, NULL, 1, NULL );
 

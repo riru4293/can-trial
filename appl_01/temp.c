@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "hardware/spi.h"
 #include "appl_common.h"
 #include "main.h"
@@ -183,9 +184,13 @@
 
 #define OPMODE_NORMAL       ( 0x00U )
 
+#define MCP2515_CANHDR_SIDH 0
+#define MCP2515_CANHDR_SIDL 1
 
 static VOID write_reg( const UCHAR addr, const UCHAR val );
 static UCHAR read_reg( const UCHAR addr );
+static UINT build_std_canid( const UCHAR *hdr );
+static void modify_reg( const UCHAR addr, const UCHAR mask, const UCHAR val );
 
 static UCHAR txhdr[ 5 ] = { 0x477U >> 3U, (0x477U << 5U) & 0xE0U, 0x00U, 0x00U, 0x08U };
 static UCHAR txbdy[ 8 ] = { 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U, 0x77U, 0x88U };
@@ -201,6 +206,17 @@ static UCHAR bus_stat = 0U;
 static UCHAR msg_bus_off[]     = "Bus-off";
 static UCHAR msg_err_passive[] = "Err-psv";
 static UCHAR msg_err_active[]  = "Err-act";
+
+static UCHAR rxhdr[ 5 ] = { 0x00U };
+static UCHAR rxbdy[ 8 ] = { 0x00U };
+static UINT rxid;
+static UCHAR mbuf[30] = { 0 };
+static TickType_t base_tick;
+static TickType_t current_tick;
+static TickType_t tickdiff;
+static UINT rcvcnt;
+static UINT cus;
+static UINT ius;
 
 VOID temp_init( VOID )
 {
@@ -282,8 +298,81 @@ VOID temp_task(VOID* unused_arg) {
             }
         }
 
-        vTaskDelay(100);
+        vTaskDelay(1000);
     }
+}
+
+VOID temp_task2(VOID* unused_arg) {
+
+    UCHAR intf;
+    rcvcnt = 0U;
+    base_tick = xTaskGetTickCount();
+
+    TickType_t xLastWakeTime;
+    const TickType_t xFrequency = 100;
+    xLastWakeTime = xTaskGetTickCount();//初期値のセット
+    
+    while ( TRUE ) {
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+
+        vTaskSuspendAll();
+        intf = read_reg( REG_CANINTF );
+
+        
+
+        // 受信済みの場合
+        if( 0 != ( intf & 0x01 ) )
+        {
+            rcvcnt++;
+
+            
+
+            if( 10U <= rcvcnt )
+            {
+                /* Read CAN header from register. */
+                drv_begin_spi();
+                drv_write_spi( SPICMD_READ_RX0_HDR );
+                drv_read_array_spi( 5U, rxhdr );
+                drv_end_spi();
+            }
+
+            modify_reg( REG_CANINTF, 0x01, 0x00 );
+        }
+
+        (VOID)xTaskResumeAll();
+
+        
+
+        if( 10U <= rcvcnt )
+        {
+            rxid = build_std_canid( rxhdr );
+
+            current_tick = xTaskGetTickCount();
+
+            if( base_tick <= current_tick )
+            {
+                tickdiff = current_tick - base_tick;
+            }
+            else{
+                tickdiff = 0xFFFF - base_tick + current_tick + 1U;
+            }
+
+            sprintf( mbuf, "CAN 0x%x (x%d), %d", rxid, rcvcnt, tickdiff );
+
+            log_put_msg( 30, mbuf );
+            base_tick = current_tick;
+            tickdiff = 0U;
+            rcvcnt = 0U;
+        }
+    }
+}
+
+static UINT build_std_canid( const UCHAR *hdr )
+{
+    return (UINT)(
+        (UINT)( (UINT)( (UINT)hdr[ MCP2515_CANHDR_SIDH ] << 3U ) & 0x000007F8UL )
+      | (UINT)( (UINT)( (UINT)hdr[ MCP2515_CANHDR_SIDL ] >> 5U ) & 0x00000007UL )
+    );
 }
 
 
@@ -303,4 +392,16 @@ static UCHAR read_reg( const UCHAR addr ) {
     drv_read_array_spi( sizeof( val ), &val );
     drv_end_spi();
     return val;
+}
+
+static void modify_reg( const UCHAR addr, const UCHAR mask, const UCHAR val ) {
+
+    drv_begin_spi();
+
+    drv_write_spi( SPICMD_MODBITS_REG );
+    drv_write_spi( addr );
+    drv_write_spi( mask );
+    drv_write_spi( val );
+
+    drv_end_spi();
 }

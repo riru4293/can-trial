@@ -26,6 +26,7 @@
 
 VOID temp_init( VOID );
 VOID temp_task(VOID* unused_arg);
+VOID temp_task2(VOID* unused_arg);
 
 
 #endif      // MAIN_H

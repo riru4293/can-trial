@@ -186,6 +186,7 @@ static VOID write_array_spi( const size_t n, const UCHAR const *buf );
 static VOID write_spi( const UCHAR val );
 static VOID write_reg( const UCHAR addr, const UCHAR val );
 static UCHAR read_reg( const UCHAR addr );
+static void modify_reg( const UCHAR addr, const UCHAR mask, const UCHAR val );
 
 static const UCHAR BAUDRATE[ BAUDRATE_NUMOF_ITEMS ] = { 0x02U, 0x89U, 0x07U }; /* CNF3,CNF2,CNF1 */
 static UCHAR txhdr[ 5 ] = { 0x444U >> 3U, (0x444U << 5U) & 0xE0U, 0x00U, 0x00U, 0x08U };
@@ -193,6 +194,26 @@ static UCHAR txbdy[ 8 ] = { 0x99U, 0x88U, 0x77U, 0x66U, 0x55U, 0x44U, 0x33U, 0x2
 
 static UCHAR tmp_buf[ 8 ] = { 0U };
 static UCHAR txb0ctrl = 0x00U;
+static uint32_t xxx = 0U;
+static uint32_t xx2 = 0U;
+static repeating_timer_t timer;
+
+static bool timer_callback( repeating_timer_t *rt )
+{
+    /* Clear interruption by received. */
+    modify_reg( REG_CANINTF, 0x01U, 0x00U );
+
+    txb0ctrl = read_reg( REG_TXB0CTRL );
+
+    // 送信済みの場合
+    if( 0 == ( txb0ctrl & 0x08 ) )
+    {
+        /* Request to send. */
+        gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
+        write_spi( SPICMD_REQ_TX0 );
+        gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
+    }
+}
 
 VOID temp_init( VOID )
 {
@@ -250,40 +271,20 @@ VOID temp_init( VOID )
     write_spi( SPICMD_REQ_TX0 );
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
 
+    add_repeating_timer_ms( 100, &timer_callback, NULL, &timer );
     while(1) {
-        /* Clear interruption by received. */
-        write_reg( REG_CANINTF, 0x00U );
-
-        txb0ctrl = read_reg( REG_TXB0CTRL );
-
-        // 送信済みの場合
-        if( 0 == ( txb0ctrl & 0x08 ) )
-        {
-            /* Request to send. */
-            // printf("Request to send.");
-            write_reg( REG_CANINTF, 0x00U );
-            // printf(" CANINTF: %x\n", read_reg( REG_CANINTF ) );
-            gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
-            write_spi( SPICMD_REQ_TX0 );
-            gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
-        }
-
-        sleep_ms(100);
+        sleep_ms(3000);
     }
 }
 
 static VOID read_array_spi( const size_t n, UCHAR *buf )
 {
-    // gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
     (VOID)spi_read_blocking( spi0, SPI_REPEATED_TX_DATA, buf, n );
-    // gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
 }
 
 static VOID write_array_spi( const size_t n, const UCHAR const *buf )
 {
-    // gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
     (VOID)spi_write_blocking( spi0, buf, n );
-    // gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
 }
 
 static VOID write_spi( const UCHAR val )
@@ -307,4 +308,16 @@ static UCHAR read_reg( const UCHAR addr ) {
     read_array_spi( sizeof( val ), &val );
     gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
     return val;
+}
+
+static void modify_reg( const UCHAR addr, const UCHAR mask, const UCHAR val ) {
+
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_LOW );
+
+    write_spi( SPICMD_MODBITS_REG );
+    write_spi( addr );
+    write_spi( mask );
+    write_spi( val );
+
+    gpio_put( GPIO_NUM_SPI_1_CS, GPIO_VOLT_HIGH );
 }

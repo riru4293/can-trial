@@ -32,7 +32,7 @@ target_include_directories(${APP_01_NAME}
 )
 
 # Enable/disable STDIO via USB and UART
-pico_enable_stdio_usb(${APP_01_NAME} TRUE)
+pico_enable_stdio_usb(${APP_01_NAME} FALSE)
 pico_enable_stdio_uart(${APP_01_NAME} TRUE)
 
 # Enable extra build products
