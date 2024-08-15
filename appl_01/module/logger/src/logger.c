@@ -8,10 +8,10 @@
 
 #include "public/logger.h"
 
-#define MAXOF_QUEUE_ITEMS ( (UCHAR)10U )
-#define SIZEOF_MSG_BUFF ( (UCHAR)( LOG_MAXOF_MSG_LEN + 1U ) )
-#define WAITOF_QUEUE_SET ( (UCHAR)0U )
-#define WAITOF_QUEUE_GET ( (UCHAR)0U )
+#define MAXOF_QUEUE_ITEMS ( (UINT8)10U )
+#define SIZEOF_MSG_BUFF ( (UINT8)( LOG_MAXOF_MSG_LEN + 1U ) )
+#define WAITOF_QUEUE_SET ( (UINT8)0U )
+#define WAITOF_QUEUE_GET ( (UINT8)0U )
 
 static volatile QueueHandle_t queue = NULL;
 static VOID task( VOID* unused_arg );
@@ -19,7 +19,7 @@ static VOID task( VOID* unused_arg );
 static VOID task( VOID* unused_arg )
 {
     BaseType_t result;
-    UCHAR tmp_msg[ SIZEOF_MSG_BUFF ] = { 0U };
+    UINT8 tmp_msg[ SIZEOF_MSG_BUFF ] = { 0U };
 
     while( TRUE )
     {
@@ -43,10 +43,10 @@ log_result_t log_create_task( VOID )
 }
 
 
-log_result_t log_put_msg( const UCHAR n, const UCHAR* msg )
+log_result_t log_put_msg( const UINT8 n, const UINT8* msg )
 {
     BaseType_t result = pdFAIL;
-    UCHAR tmp_msg[ SIZEOF_MSG_BUFF ] = { 0U };
+    UINT8 tmp_msg[ SIZEOF_MSG_BUFF ] = { 0U };
 
     if( ( LOG_MINOF_MSG_LEN <= n ) && ( LOG_MAXOF_MSG_LEN >= n ) )
     {

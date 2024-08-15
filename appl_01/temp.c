@@ -7,11 +7,11 @@
 #include "logger/include/public/logger.h"
 
 
-#define GPIO_NUM_SPI_1_MISO             ( (UCHAR)4U )
-#define GPIO_NUM_SPI_1_CS               ( (UCHAR)5U )
-#define GPIO_NUM_SPI_1_SCK              ( (UCHAR)6U )
-#define GPIO_NUM_SPI_1_MOSI             ( (UCHAR)7U )
-#define SPI_REPEATED_TX_DATA            ( (UCHAR)0U )
+#define GPIO_NUM_SPI_1_MISO             ( (UINT8)4U )
+#define GPIO_NUM_SPI_1_CS               ( (UINT8)5U )
+#define GPIO_NUM_SPI_1_SCK              ( (UINT8)6U )
+#define GPIO_NUM_SPI_1_MOSI             ( (UINT8)7U )
+#define SPI_REPEATED_TX_DATA            ( (UINT8)0U )
 
 #define SPICMD_WRITE_REG                ( 0x02U )
 #define SPICMD_READ_REG                 ( 0x03U )
@@ -187,27 +187,27 @@
 #define MCP2515_CANHDR_SIDH 0
 #define MCP2515_CANHDR_SIDL 1
 
-static VOID write_reg( const UCHAR addr, const UCHAR val );
-static UCHAR read_reg( const UCHAR addr );
-static UINT build_std_canid( const UCHAR *hdr );
-static void modify_reg( const UCHAR addr, const UCHAR mask, const UCHAR val );
+static VOID write_reg( const UINT8 addr, const UINT8 val );
+static UINT8 read_reg( const UINT8 addr );
+static UINT32 build_std_canid( const UINT8 *hdr );
+static void modify_reg( const UINT8 addr, const UINT8 mask, const UINT8 val );
 
-static UCHAR txhdr[ 5 ] = { 0x477U >> 3U, (0x477U << 5U) & 0xE0U, 0x00U, 0x00U, 0x08U };
-static UCHAR txbdy[ 8 ] = { 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U, 0x77U, 0x88U };
+static UINT8 txhdr[ 5 ] = { 0x477U >> 3U, (0x477U << 5U) & 0xE0U, 0x00U, 0x00U, 0x08U };
+static UINT8 txbdy[ 8 ] = { 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U, 0x77U, 0x88U };
 
-static UCHAR tmp_buf[ 8 ] = { 0U };
-static UCHAR eflg = 0x00U;
-static UCHAR txb0ctrl = 0x00U;
+static UINT8 tmp_buf[ 8 ] = { 0U };
+static UINT8 eflg = 0x00U;
+static UINT8 txb0ctrl = 0x00U;
 
-static UCHAR bus_stat = 0U;
-static UCHAR msg_bus_off[]     = "Bus-off";
-static UCHAR msg_err_passive[] = "Err-psv";
-static UCHAR msg_err_active[]  = "Err-act";
+static UINT8 bus_stat = 0U;
+static UINT8 msg_bus_off[]     = "Bus-off";
+static UINT8 msg_err_passive[] = "Err-psv";
+static UINT8 msg_err_active[]  = "Err-act";
 
-static UCHAR rxhdr[ 5 ] = { 0x00U };
-static UCHAR rxbdy[ 8 ] = { 0x00U };
-static UINT rxid;
-static UCHAR mbuf[30] = { 0 };
+static UINT8 rxhdr[ 5 ] = { 0x00U };
+static UINT8 rxbdy[ 8 ] = { 0x00U };
+static UINT32 rxid;
+static UINT8 mbuf[30] = { 0 };
 static TickType_t base_tick;
 static TickType_t current_tick;
 static TickType_t tickdiff;
@@ -298,16 +298,16 @@ VOID temp_task(VOID* unused_arg) {
     }
 }
 
-static UINT build_std_canid( const UCHAR *hdr )
+static UINT32 build_std_canid( const UINT8 *hdr )
 {
-    return (UINT)(
-        (UINT)( (UINT)( (UINT)hdr[ MCP2515_CANHDR_SIDH ] << 3U ) & 0x000007F8UL )
-      | (UINT)( (UINT)( (UINT)hdr[ MCP2515_CANHDR_SIDL ] >> 5U ) & 0x00000007UL )
+    return (UINT32)(
+        (UINT32)( (UINT32)( (UINT32)hdr[ MCP2515_CANHDR_SIDH ] << 3U ) & 0x000007F8UL )
+      | (UINT32)( (UINT32)( (UINT32)hdr[ MCP2515_CANHDR_SIDL ] >> 5U ) & 0x00000007UL )
     );
 }
 
 
-static VOID write_reg( const UCHAR addr, const UCHAR val ) {
+static VOID write_reg( const UINT8 addr, const UINT8 val ) {
     drv_begin_spi();
     drv_write_spi( SPICMD_WRITE_REG );
     drv_write_spi( addr );
@@ -315,8 +315,8 @@ static VOID write_reg( const UCHAR addr, const UCHAR val ) {
     drv_end_spi();
 }
 
-static UCHAR read_reg( const UCHAR addr ) {
-    UCHAR val;
+static UINT8 read_reg( const UINT8 addr ) {
+    UINT8 val;
     drv_begin_spi();
     drv_write_spi( SPICMD_READ_REG );
     drv_write_spi( addr );
@@ -325,7 +325,7 @@ static UCHAR read_reg( const UCHAR addr ) {
     return val;
 }
 
-static void modify_reg( const UCHAR addr, const UCHAR mask, const UCHAR val ) {
+static void modify_reg( const UINT8 addr, const UINT8 mask, const UINT8 val ) {
 
     drv_begin_spi();
 

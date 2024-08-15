@@ -45,19 +45,19 @@ VOID drv_end_spi( VOID )
 }
 
 
-VOID drv_read_array_spi( const size_t n, UCHAR *buf )
+VOID drv_read_array_spi( const size_t n, UINT8 *buf )
 {
     read_array_spi( n, buf );
 }
 
 
-VOID drv_write_array_spi( const size_t n, const UCHAR const *buf )
+VOID drv_write_array_spi( const size_t n, const UINT8 const *buf )
 {
     write_array_spi( n, buf );
 }
 
 
-VOID drv_write_spi( const UCHAR val )
+VOID drv_write_spi( const UINT8 val )
 {
     write_spi( val );
 }

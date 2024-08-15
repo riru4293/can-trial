@@ -1,19 +1,34 @@
 #ifndef APPL_COMMON_H
 #define APPL_COMMON_H
 
+
 #include "pico/stdlib.h"
 
-typedef uint8_t UCHAR;
-typedef uint16_t USHORT;
-typedef uint32_t UINT;
-typedef uint64_t ULONG;
+
+typedef uint     UINT;      /* 32bit */
+typedef uint8_t  UINT8;
+typedef uint16_t UINT16;
+typedef uint32_t UINT32;
+typedef uint64_t UINT64;
+
 typedef bool BOOL;
 typedef void VOID;
 
-#define TRUE            ( (BOOL)true    )
-#define FALSE           ( (BOOL)false   )
 
-#define GPIO_VOLT_LOW   ( (BOOL)false   )
-#define GPIO_VOLT_HIGH  ( (BOOL)true    )
+#define TRUE            ( (BOOL)true )
+#define FALSE           ( (BOOL)false )
+
+#define MINOF_UINT      ( (UINT)0U )
+#define MINOF_UINT8     ( (UINT8)0U )
+#define MINOF_UINT16    ( (UINT16)0U )
+#define MINOF_UINT32    ( (UINT32)0U )
+#define MINOF_UINT64    ( (UINT64)0U )
+
+#define MAXOF_UINT      ( (UINT)0xFFFFFFFFU )
+#define MAXOF_UINT8     ( (UINT8)0xFFU )
+#define MAXOF_UINT16    ( (UINT16)0xFFFFU )
+#define MAXOF_UINT32    ( (UINT32)0xFFFFFFFFU )
+#define MAXOF_UINT64    ( (UINT64)0xFFFFFFFFFFFFFFFFULL )
+
 
 #endif /* APPL_COMMON_H */

@@ -2,15 +2,21 @@
 #include "private/rp2040.h"
 
 
-#define GPIO_NUM_SPI_1_MISO             ( (UCHAR) 4U )
-#define GPIO_NUM_SPI_1_CS               ( (UCHAR) 5U )
-#define GPIO_NUM_SPI_1_SCK              ( (UCHAR) 6U )
-#define GPIO_NUM_SPI_1_MOSI             ( (UCHAR) 7U )
-#define GPIO_NUM_CAN_INTERRUPTION       ( (UCHAR)22U )
-#define GPIO_NUM_INTERNAL_LED           ( (UCHAR)25U )
+#define GPIO_VOLT_LOW   ( (BOOL)false   )
+#define GPIO_VOLT_HIGH  ( (BOOL)true    )
+
+#define GPIO_NUM_SPI_1_MISO             ( (UINT) 4U )
+#define GPIO_NUM_SPI_1_CS               ( (UINT) 5U )
+#define GPIO_NUM_SPI_1_SCK              ( (UINT) 6U )
+#define GPIO_NUM_SPI_1_MOSI             ( (UINT) 7U )
+#define GPIO_NUM_CAN_INTERRUPTION       ( (UINT)21U )
+#define GPIO_NUM_INTERNAL_LED           ( (UINT)25U )
 
 #define SPI_BAUDRATE_10MHZ              ( (UINT)10000000U ) /* 10MHz */
-#define SPI_REPEATED_TX_DATA            ( (UCHAR)0U )
+#define SPI_REPEATED_TX_DATA            ( (UINT8)0U )
+
+
+static drv_irq_callback_t irq_callback = NULL;
 
 
 drv_result_t init_stdio( VOID )
@@ -65,19 +71,31 @@ VOID end_spi( VOID )
 }
 
 
-VOID read_array_spi( const size_t n, UCHAR *buf )
+VOID read_array_spi( const size_t n, UINT8 *buf )
 {
     (VOID)spi_read_blocking( spi0, SPI_REPEATED_TX_DATA, buf, n );
 }
 
 
-VOID write_array_spi( const size_t n, const UCHAR const *buf )
+VOID write_array_spi( const size_t n, const UINT8 const *buf )
 {
     (VOID)spi_write_blocking( spi0, buf, n );
 }
 
 
-VOID write_spi( const UCHAR val )
+VOID write_spi( const UINT8 val )
 {
-    write_array_spi( sizeof( UCHAR ), &val );
+    write_array_spi( sizeof( UINT8 ), &val );
+}
+
+
+VOID drv_set_irq_callback( drv_irq_callback_t callback )
+{
+    irq_callback = callback;
+}
+
+
+VOID drv_enable_irq( BOOL enabled )
+{
+    gpio_set_irq_enabled_with_callback( GPIO_NUM_CAN_INTERRUPTION, GPIO_IRQ_LEVEL_LOW, enabled, irq_callback );
 }
