@@ -338,8 +338,8 @@ static void modify_reg( const UINT8 addr, const UINT8 mask, const UINT8 val ) {
 }
 
 // 割り込みハンドラ。タスクコールするだけ。
-VOID gpio_isr(uint gpio, uint32_t events) {
-    enable_irq( FALSE );
+VOID gpio_isr(UINT gpio, UINT32 events) {
+    drv_enable_irq( FALSE );
     
     static BaseType_t higher_priority_task_woken = pdFALSE;
     vTaskNotifyGiveFromISR(handle_task_alrt, &higher_priority_task_woken);
@@ -348,21 +348,12 @@ VOID gpio_isr(uint gpio, uint32_t events) {
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
-VOID enable_irq(BOOL state) {
-
-    gpio_set_irq_enabled_with_callback(21U,
-                                       GPIO_IRQ_LEVEL_LOW,
-                                       state,
-                                       &gpio_isr);
-}
-
 VOID temp_task3(VOID* unused_arg)
 {
     base_tick = xTaskGetTickCount();
 
-    gpio_init(21U);
-    gpio_set_dir(21U, GPIO_IN);
-    gpio_pull_up(21U);
+    drv_set_irq_callback( gpio_isr );
+    drv_enable_irq( TRUE );
     write_reg( REG_CANINTE, 0x01U );
 
 
@@ -402,7 +393,7 @@ VOID temp_task3(VOID* unused_arg)
             tickdiff = 0U;
 
             modify_reg( REG_CANINTF, 0x01, 0x00 );
-            enable_irq( TRUE );
+            drv_enable_irq( TRUE );
         }
     }
 }

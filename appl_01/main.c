@@ -42,7 +42,8 @@ int main()
     xTaskCreate(temp_task3, "TEMP_TASK3", 1288, NULL, 3, &handle_task_alrt);
     log_create_task();
 
-    enable_irq( TRUE );
+    // enable_irq( TRUE );
+    // drv_enable_irq( TRUE );
 
     vTaskStartScheduler();
     
