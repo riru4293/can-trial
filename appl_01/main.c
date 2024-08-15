@@ -10,6 +10,8 @@
 
 #include "private/main.h"
 #include "private/irq_task.h"
+#include "private/can_rx_task.h"
+#include "private/can_tx_task.h"
 
 
 /*
@@ -42,6 +44,8 @@ int main()
     xTaskCreate(temp_task, "TEMP_TASK", 1024, NULL, 2, NULL);
     // xTaskCreate(temp_task3, "TEMP_TASK3", 1288, NULL, 3, &handle_task_alrt);
     log_create_task();
+    create_can_rx_task();
+    create_can_tx_task();
     create_irq_task();
 
     vTaskStartScheduler();

@@ -8,10 +8,15 @@
 #include "logger/include/public/logger.h"
 
 #include "private/irq_task.h"
+#include "private/can_rx_task.h"
+#include "private/can_tx_task.h"
 
+
+/* Prototypes */
 static VOID task( VOID* unused_arg );
 
 
+/* Globals */
 static TaskHandle_t task_handle = NULL;
 
 
@@ -19,7 +24,6 @@ static TaskHandle_t task_handle = NULL;
 #define SPICMD_READ_RX0_HDR             ( 0x90U )
 #define MCP2515_CANHDR_SIDH 0
 #define MCP2515_CANHDR_SIDL 1
-#define REG_CANINTF                     ( 0x2CU )
 #define SPICMD_REQ_TX0                  ( 0x81U )
 static UINT32 build_std_canid( const UINT8 *hdr );
 
@@ -41,8 +45,12 @@ VOID irq_handler( VOID ) {
 }
 
 
-static VOID task(VOID* unused_arg)
+static VOID task( VOID* unused_arg )
 {
+    BaseType_t require_task_switch = pdFALSE;
+    BaseType_t tmp_require_task_switch = pdFALSE;
+    TaskHandle_t handle;
+
     UINT32 rxid;
     UINT8 rxhdr[ 5 ] = { 0U };
     UINT8 rxbdy[ 8 ] = { 0U };
@@ -56,6 +64,9 @@ static VOID task(VOID* unused_arg)
     {
         ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
 
+        require_task_switch = pdFALSE;
+        tmp_require_task_switch = pdFALSE;
+
         vTaskSuspendAll();
         intf = drv_get_irq_sources();
         (VOID)xTaskResumeAll();
@@ -64,41 +75,17 @@ static VOID task(VOID* unused_arg)
         // 受信しょりBy割り込み
         if( DRV_IRQ_NONE != ( intf & DRV_IRQ_CAN_RX0_FULL ) )
         {
-            vTaskSuspendAll();
+            handle = get_can_rx_task_handler();
 
-            /* Read CAN header from register. */
-            drv_begin_spi();
-            drv_write_spi( SPICMD_READ_RX0_HDR );
-            drv_read_array_spi( 5U, rxhdr );
-            drv_end_spi();
-
-            (VOID)xTaskResumeAll();
-
-            rxid = build_std_canid( rxhdr );
-
-            sprintf( mbuf, "CAN 0x%x", rxid );
-            // log_put_msg( sizeof( mbuf ), mbuf );
-
-            drv_clear_irq_sources( DRV_IRQ_CAN_RX0_FULL );
+            xTaskNotifyGive( handle );
         }
 
         // 送信済みの場合
         if( DRV_IRQ_NONE != ( intf & DRV_IRQ_CAN_TX0_EMPTY ) )
         {
-            vTaskSuspendAll();
+            handle = get_can_tx_task_handler();
 
-            /* Clear IRQ factor of the TX0 */
-            drv_clear_irq_sources( DRV_IRQ_CAN_TX0_EMPTY );
-
-            /* Request to send. */
-            drv_begin_spi();
-            drv_write_spi( SPICMD_REQ_TX0 );
-            drv_end_spi();
-
-            (VOID)xTaskResumeAll();
-
-            sprintf( mbuf, "Request to CAN send." );
-            // log_put_msg( sizeof( mbuf ), mbuf );
+            xTaskNotifyGive( handle );
         }
 
         drv_enable_irq( TRUE );
