@@ -19,11 +19,9 @@ static TaskHandle_t task_handle = NULL;
 #define SPICMD_READ_RX0_HDR             ( 0x90U )
 #define MCP2515_CANHDR_SIDH 0
 #define MCP2515_CANHDR_SIDL 1
-#define SPICMD_READ_REG                 ( 0x03U )
 #define REG_CANINTF                     ( 0x2CU )
 #define SPICMD_REQ_TX0                  ( 0x81U )
 static UINT32 build_std_canid( const UINT8 *hdr );
-static UINT8 read_reg( const UINT8 addr );
 
 
 VOID create_irq_task( VOID )
@@ -59,7 +57,7 @@ static VOID task(VOID* unused_arg)
         ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
 
         vTaskSuspendAll();
-        intf = read_reg( REG_CANINTF );
+        intf = drv_get_irq_sources();
         (VOID)xTaskResumeAll();
 
 
@@ -114,16 +112,4 @@ static UINT32 build_std_canid( const UINT8 *hdr )
         (UINT32)( (UINT32)( (UINT32)hdr[ MCP2515_CANHDR_SIDH ] << 3U ) & 0x000007F8UL )
       | (UINT32)( (UINT32)( (UINT32)hdr[ MCP2515_CANHDR_SIDL ] >> 5U ) & 0x00000007UL )
     );
-}
-
-
-static UINT8 read_reg( const UINT8 addr )
-{
-    UINT8 val;
-    drv_begin_spi();
-    drv_write_spi( SPICMD_READ_REG );
-    drv_write_spi( addr );
-    drv_read_array_spi( sizeof( val ), &val );
-    drv_end_spi();
-    return val;
 }

@@ -292,3 +292,9 @@ VOID drv_clear_irq_sources( UINT8 sources )
 {
     modify_reg( REG_CANINTF, sources, 0x00U );
 }
+
+
+UINT8 drv_get_irq_sources()
+{
+    return read_reg( REG_CANINTF );
+}
