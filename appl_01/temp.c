@@ -253,20 +253,7 @@ VOID temp_task(VOID* unused_arg) {
         vTaskSuspendAll();
 
         eflg = read_reg( REG_EFLG );
-        txb0ctrl = read_reg( REG_TXB0CTRL );
-
-        // 送信済みの場合
-        if( 0 == ( txb0ctrl & 0x08 ) )
-        {
-            /* Clear IRQ factor of the TX0 */
-            drv_clear_irq_sources( DRV_IRQ_CAN_TX0_EMPTY );
-
-            /* Request to send. */
-            drv_begin_spi();
-            drv_write_spi( SPICMD_REQ_TX0 );
-            drv_end_spi();
-        }
-
+        
         (VOID)xTaskResumeAll();
         
 

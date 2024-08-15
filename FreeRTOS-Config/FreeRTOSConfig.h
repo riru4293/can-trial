@@ -38,7 +38,7 @@
 #define configUSE_TICKLESS_IDLE                 0
 #define configCPU_CLOCK_HZ                      125000000   // 125MHz for RP2040
 #define configTICK_RATE_HZ                      1000        // FreeRTOS beats per second
-#define configMAX_PRIORITIES                    5           // Max number of priority values (0-24)
+#define configMAX_PRIORITIES                    9           // Max number of priority values (0-24)
 #define configMINIMAL_STACK_SIZE                128
 #define configMAX_TASK_NAME_LEN                 16
 #define configUSE_16_BIT_TICKS                  0
@@ -73,8 +73,8 @@
 
 /* Run time and task stats gathering related definitions. */
 #define configGENERATE_RUN_TIME_STATS           0
-#define configUSE_TRACE_FACILITY                0
-#define configUSE_STATS_FORMATTING_FUNCTIONS    0
+#define configUSE_TRACE_FACILITY                0   /* default:0 */
+#define configUSE_STATS_FORMATTING_FUNCTIONS    0   /* default:0 */
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES                   0
@@ -99,7 +99,7 @@
 #define INCLUDE_vTaskDelay                      1
 #define INCLUDE_xTaskGetSchedulerState          1
 #define INCLUDE_xTaskGetCurrentTaskHandle       1
-#define INCLUDE_uxTaskGetStackHighWaterMark     0
+#define INCLUDE_uxTaskGetStackHighWaterMark     0   /* default:0 */
 #define INCLUDE_xTaskGetIdleTaskHandle          0
 #define INCLUDE_eTaskGetState                   0
 #define INCLUDE_xEventGroupSetBitFromISR        1
