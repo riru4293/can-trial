@@ -9,6 +9,7 @@ add_subdirectory( module/logger )
 
 # Include app source code file(s)
 add_executable(${APP_01_NAME}
+    ${APP_01_SRC_DIRECTORY}/irq_task.c
     ${APP_01_SRC_DIRECTORY}/main.c
     ${APP_01_SRC_DIRECTORY}/temp.c
 )

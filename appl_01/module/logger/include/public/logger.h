@@ -2,7 +2,7 @@
 #define LOGGER_H
 
 
-#include "appl_common.h"
+#include "public/appl_common.h"
 
 
 typedef UINT8 log_result_t;

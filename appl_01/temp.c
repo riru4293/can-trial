@@ -1,10 +1,11 @@
 #include <stdio.h>
+
 #include "hardware/spi.h"
-#include "appl_common.h"
-#include "main.h"
-// #include <string.h>
+
 #include "driver/include/public/driver.h"
 #include "logger/include/public/logger.h"
+
+#include "private/main.h"
 
 
 #define GPIO_NUM_SPI_1_MISO             ( (UINT8)4U )
@@ -190,7 +191,6 @@
 static VOID write_reg( const UINT8 addr, const UINT8 val );
 static UINT8 read_reg( const UINT8 addr );
 static UINT32 build_std_canid( const UINT8 *hdr );
-static void modify_reg( const UINT8 addr, const UINT8 mask, const UINT8 val );
 
 static UINT8 txhdr[ 5 ] = { 0x477U >> 3U, (0x477U << 5U) & 0xE0U, 0x00U, 0x00U, 0x08U };
 static UINT8 txbdy[ 8 ] = { 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U, 0x77U, 0x88U };
@@ -258,8 +258,10 @@ VOID temp_task(VOID* unused_arg) {
         // 送信済みの場合
         if( 0 == ( txb0ctrl & 0x08 ) )
         {
+            /* Clear IRQ factor of the TX0 */
+            drv_clear_irq_sources( DRV_IRQ_CAN_TX0_EMPTY );
+
             /* Request to send. */
-            modify_reg( REG_CANINTF, 0x04U, 0x00U );
             drv_begin_spi();
             drv_write_spi( SPICMD_REQ_TX0 );
             drv_end_spi();
@@ -325,75 +327,4 @@ static UINT8 read_reg( const UINT8 addr ) {
     return val;
 }
 
-static void modify_reg( const UINT8 addr, const UINT8 mask, const UINT8 val ) {
 
-    drv_begin_spi();
-
-    drv_write_spi( SPICMD_MODBITS_REG );
-    drv_write_spi( addr );
-    drv_write_spi( mask );
-    drv_write_spi( val );
-
-    drv_end_spi();
-}
-
-// 割り込みハンドラ。タスクコールするだけ。
-VOID gpio_isr(UINT gpio, UINT32 events) {
-    drv_enable_irq( FALSE );
-    
-    static BaseType_t higher_priority_task_woken = pdFALSE;
-    vTaskNotifyGiveFromISR(handle_task_alrt, &higher_priority_task_woken);
-
-    // Exit to context switch if necessary
-    portYIELD_FROM_ISR(higher_priority_task_woken);
-}
-
-VOID temp_task3(VOID* unused_arg)
-{
-    base_tick = xTaskGetTickCount();
-
-    drv_set_irq_callback( gpio_isr );
-    drv_enable_irq( TRUE );
-    write_reg( REG_CANINTE, 0x01U );
-
-
-    while( TRUE )
-    {
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-
-        // 受信しょりBy割り込み
-        {
-            vTaskSuspendAll();
-
-            /* Read CAN header from register. */
-            drv_begin_spi();
-            drv_write_spi( SPICMD_READ_RX0_HDR );
-            drv_read_array_spi( 5U, rxhdr );
-            drv_end_spi();
-
-            (VOID)xTaskResumeAll();
-
-            rxid = build_std_canid( rxhdr );
-
-            current_tick = xTaskGetTickCount();
-
-            if( base_tick <= current_tick )
-            {
-                tickdiff = current_tick - base_tick;
-            }
-            else{
-                tickdiff = 0xFFFF - base_tick + current_tick + 1U;
-            }
-
-            sprintf( mbuf, "CAN 0x%x(%d)", rxid, tickdiff );
-            log_put_msg( 30, mbuf );
-
-            base_tick = current_tick;
-            tickdiff = 0U;
-
-            modify_reg( REG_CANINTF, 0x01, 0x00 );
-            drv_enable_irq( TRUE );
-        }
-    }
-}

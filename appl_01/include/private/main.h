@@ -22,7 +22,7 @@
 // Pico SDK
 #include "pico/stdlib.h"            // Includes `hardware_gpio.h`
 // #include "pico/binary_info.h"
-
+#include "public/appl_common.h"
 
 VOID temp_init( VOID );
 VOID temp_task(VOID* unused_arg);

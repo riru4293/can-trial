@@ -16,6 +16,11 @@
 #define SPI_REPEATED_TX_DATA            ( (UINT8)0U )
 
 
+/* Prototypes */
+VOID drv_gpio_irq_handler( UINT gpio, UINT32 events );
+
+
+/* Globals */
 static drv_irq_callback_t irq_callback = NULL;
 
 
@@ -97,5 +102,13 @@ VOID drv_set_irq_callback( drv_irq_callback_t callback )
 
 VOID drv_enable_irq( BOOL enabled )
 {
-    gpio_set_irq_enabled_with_callback( GPIO_NUM_CAN_INTERRUPTION, GPIO_IRQ_LEVEL_LOW, enabled, irq_callback );
+    gpio_set_irq_enabled_with_callback( GPIO_NUM_CAN_INTERRUPTION, GPIO_IRQ_LEVEL_LOW, enabled, drv_gpio_irq_handler );
+}
+
+VOID drv_gpio_irq_handler( UINT gpio, UINT32 events )
+{
+    if( ( NULL != irq_callback ) && ( GPIO_NUM_CAN_INTERRUPTION == gpio ) && ( GPIO_IRQ_LEVEL_LOW == events ) )
+    {
+        irq_callback();
+    }
 }
