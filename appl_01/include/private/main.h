@@ -25,9 +25,9 @@
 #include "public/appl_common.h"
 
 VOID temp_init( VOID );
-VOID temp_task(VOID* unused_arg);
-VOID temp_task2(VOID* unused_arg);
-VOID temp_task3(VOID* unused_arg);
+VOID temp_task(VOID* unused);
+VOID temp_task2(VOID* unused);
+VOID temp_task3(VOID* unused);
 
 
 

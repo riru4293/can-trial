@@ -12,7 +12,7 @@
 
 
 /* Prototypes */
-static VOID task( VOID* unused_arg );
+static VOID task( VOID* unused );
 
 
 /* Globals */
@@ -48,7 +48,7 @@ TaskHandle_t get_can_tx_task_handler( VOID )
 #endif
 
 
-static VOID task( VOID* unused_arg )
+static VOID task( VOID* unused )
 {
 #ifdef DEBUG
     xAutoReloadTimer = xTimerCreate("Reload" , 1000, pdTRUE , NULL, autoReloadTimerCallback);

@@ -240,7 +240,7 @@ VOID temp_init( VOID )
     drv_end_spi();
 }
 
-VOID temp_task(VOID* unused_arg) {
+VOID temp_task(VOID* unused) {
 
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = 1000;

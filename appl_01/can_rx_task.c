@@ -11,7 +11,7 @@
 
 
 /* Prototypes */
-static VOID task( VOID* unused_arg );
+static VOID task( VOID* unused );
 
 
 /* Globals */
@@ -37,7 +37,7 @@ TaskHandle_t get_can_rx_task_handler( VOID )
 }
 
 
-static VOID task( VOID* unused_arg )
+static VOID task( VOID* unused )
 {
     UINT32 rxid;
     UINT8 rxhdr[ 5 ] = { 0U };

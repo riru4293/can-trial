@@ -14,7 +14,7 @@
 #define IRQ_SOURCES (UINT8)( DRV_IRQ_CAN_TX0_EMPTY | DRV_IRQ_CAN_RX0_FULL )
 
 /* Prototypes */
-static VOID task( VOID* unused_arg );
+static VOID task( VOID* unused );
 
 
 /* Globals */
@@ -39,7 +39,7 @@ VOID irq_handler( VOID )
 }
 
 
-static VOID task( VOID* unused_arg )
+static VOID task( VOID* unused )
 {
     const TaskHandle_t can_rx_task_handler = get_can_rx_task_handler();
     const TaskHandle_t can_tx_task_handler = get_can_tx_task_handler();
