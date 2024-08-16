@@ -182,7 +182,7 @@ static VOID write_reg( const UINT8 addr, const UINT8 val );
 static UINT8 read_reg( const UINT8 addr );
 
 
-drv_result_t init_mcp2515( VOID )
+VOID drv_reset_can_controller( VOID )
 {
     /* Reset */
     begin_spi();
@@ -202,9 +202,6 @@ drv_result_t init_mcp2515( VOID )
 
     /* 受信バッファ２設定。フィルタ一致のみ受信。 */
     write_reg( REG_RXB1CTRL, 0x00 );
-
-
-    return DRV_SUCCESS;
 }
 
 

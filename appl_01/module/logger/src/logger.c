@@ -28,13 +28,25 @@
 /* -------------------------------------------------------------------------- */
 /* Prototypes                                                                 */
 /* -------------------------------------------------------------------------- */
-static volatile QueueHandle_t queue_handle = NULL;
 static VOID task( VOID *unused );
+
+
+/* -------------------------------------------------------------------------- */
+/* Globals                                                                 */
+/* -------------------------------------------------------------------------- */
+static volatile QueueHandle_t queue_handle = NULL;
+static TaskHandle_t task_handle = NULL;
 
 
 /* -------------------------------------------------------------------------- */
 /* Public functions                                                           */
 /* -------------------------------------------------------------------------- */
+TaskHandle_t log_get_task_handler( VOID )
+{
+    return task_handle;
+}
+
+
 VOID log_create_task( VOID )
 {
     BaseType_t result;
@@ -48,7 +60,7 @@ VOID log_create_task( VOID )
     }
 
     /* Create logger task */
-    result = xTaskCreate( task, "LOGGER_TASK", 1024, NULL, 1, NULL );
+    result = xTaskCreate( task, "LOGGER_TASK", 1024, NULL, 1, &task_handle );
 
     if( pdPASS != result )
     {

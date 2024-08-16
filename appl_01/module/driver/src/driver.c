@@ -11,11 +11,6 @@ drv_result_t drv_init( VOID )
     init_spi();
 
     result = init_stdio();
-    
-    if( DRV_SUCCESS == result )
-    {
-        result = init_mcp2515();
-    }
 
     return result;
 }

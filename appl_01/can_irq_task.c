@@ -19,15 +19,15 @@ static VOID task( VOID* unused );
 static TaskHandle_t task_handle = NULL;
 
 
-TaskHandle_t get_irq_task_handler( VOID )
+TaskHandle_t get_can_irq_task_handler( VOID )
 {
     return task_handle;
 }
 
 
-VOID create_irq_task( VOID )
+VOID create_can_irq_task( VOID )
 {
-    xTaskCreate( task, "IRQ_TASK", 1024, NULL, 7, &task_handle );
+    xTaskCreate( task, "CAN_IRQ_TASK", 1024, NULL, 7, &task_handle );
 }
 
 VOID irq_handler( VOID )
@@ -91,7 +91,10 @@ static VOID task( VOID* unused )
         /* CAN受信オーバーフロー確認 */
         tmp = drv_get_err_occurrence();
         if( tmp & 0xC0 )
+        {
             printf("over! %02X", tmp);
+            request_reset_can_controller();
+        }
 #endif /* DEBUG */
 
         /* End critical section */

@@ -10,6 +10,8 @@
 /* PICO-SDK */
 
 /* FreeRTOS */
+#include <FreeRTOS.h>
+#include <task.h>
 
 /* APPL */
 #include "public/appl_common.h"
@@ -26,6 +28,7 @@
 /* Prototypes                                                                 */
 /* -------------------------------------------------------------------------- */
 VOID log_create_task( VOID );
+TaskHandle_t log_get_task_handler( VOID );
 VOID log_put_msg( const UINT8 n, const UINT8 *msg );
 
 

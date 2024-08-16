@@ -33,18 +33,16 @@ int main()
     
     if( ( DRV_SUCCESS == result ) )
     {
-        temp_init();
-
         // Print the application information to UART.
         printf("App: %s %s.\n", APP_NAME, APP_VERSION);
     }
 
     xTaskCreate(temp_task, "TEMP_TASK", 1024, NULL, 2, NULL);
-    // xTaskCreate(temp_task3, "TEMP_TASK3", 1288, NULL, 3, &handle_task_alrt);
     log_create_task();
+    create_can_init_task();
+    create_can_irq_task();
     create_can_rx_task();
     create_can_tx_task();
-    create_irq_task();
 
     vTaskStartScheduler();
     
