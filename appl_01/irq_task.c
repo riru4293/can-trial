@@ -11,6 +11,7 @@
 #include "private/can_rx_task.h"
 #include "private/can_tx_task.h"
 
+#define IRQ_SOURCES (UINT8)( DRV_IRQ_CAN_TX0_EMPTY | DRV_IRQ_CAN_RX0_FULL )
 
 /* Prototypes */
 static VOID task( VOID* unused_arg );
@@ -20,24 +21,17 @@ static VOID task( VOID* unused_arg );
 static TaskHandle_t task_handle = NULL;
 
 
-/* temp */
-#define SPICMD_READ_RX0_HDR             ( 0x90U )
-#define MCP2515_CANHDR_SIDH 0
-#define MCP2515_CANHDR_SIDL 1
-#define SPICMD_REQ_TX0                  ( 0x81U )
-static UINT32 build_std_canid( const UINT8 *hdr );
-
-
 VOID create_irq_task( VOID )
 {
     xTaskCreate( task, "IRQ_TASK", 1024, NULL, 7, &task_handle );
 }
 
-
-VOID irq_handler( VOID ) {
-    drv_enable_irq( FALSE );
-    
+VOID irq_handler( VOID )
+{
     static BaseType_t higher_priority_task_woken = pdFALSE;
+
+    drv_enable_irq( FALSE );
+
     vTaskNotifyGiveFromISR( task_handle, &higher_priority_task_woken );
 
     // Exit to context switch if necessary
@@ -47,56 +41,74 @@ VOID irq_handler( VOID ) {
 
 static VOID task( VOID* unused_arg )
 {
-    BaseType_t require_task_switch = pdFALSE;
-    BaseType_t tmp_require_task_switch = pdFALSE;
-    TaskHandle_t handle;
+    const TaskHandle_t can_rx_task_handler = get_can_rx_task_handler();
+    const TaskHandle_t can_tx_task_handler = get_can_tx_task_handler();
+    UINT8 occurred_irq;
 
-    UINT32 rxid;
-    UINT8 rxhdr[ 5 ] = { 0U };
-    UINT8 rxbdy[ 8 ] = { 0U };
-    UINT8 mbuf[30] = { 0 };
-    UINT8 intf;
+#ifdef DEBUG
+    UINT8 tmp;
+#endif /* DEBUG */
  
+    /* Set callback function for IRQ */
     drv_set_irq_callback( irq_handler );
+
+    /* Enable IRQ */
     drv_enable_irq( TRUE );
+
+    /* Enable IRQ sources */
+    drv_enable_irq_sources( IRQ_SOURCES );
+
+    drvtmp_to_normal_mode();
 
     while( TRUE )
     {
+        /* Wait for an IRQ to occur */
         ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
 
-        require_task_switch = pdFALSE;
-        tmp_require_task_switch = pdFALSE;
+        /* Begin critical section */
+        taskENTER_CRITICAL();
 
-        vTaskSuspendAll();
-        intf = drv_get_irq_sources();
-        (VOID)xTaskResumeAll();
+        /* Get IRQ sources */
+        occurred_irq = drv_get_occurred_irq();
 
-
-        // 受信しょりBy割り込み
-        if( DRV_IRQ_NONE != ( intf & DRV_IRQ_CAN_RX0_FULL ) )
+        /* If an IRQ source exists, disable it. */
+        /* Because it prevents reentrancy by the same IRQ source */
+        if ( DRV_IRQ_NONE != occurred_irq )
         {
-            handle = get_can_rx_task_handler();
+            drv_disable_irq_sources( occurred_irq );
+        }
+#ifdef DEBUG
+        else{
+            printf("twice");
+        }
+#endif /* DEBUG */
 
-            xTaskNotifyGive( handle );
+#ifdef DEBUG
+        /* CAN受信オーバーフロー確認 */
+        tmp = drvtmp_get_eflg();
+        if( tmp & 0xC0 )
+            printf("over! %02X", tmp);
+#endif /* DEBUG */
+
+        /* End critical section */
+        taskEXIT_CRITICAL();
+
+        
+
+
+        /* Notify the CAN-RX task of CAN reception */
+        if( DRV_IRQ_NONE != ( occurred_irq & DRV_IRQ_CAN_RX0_FULL ) )
+        {
+            xTaskNotifyGive( can_rx_task_handler );
         }
 
-        // 送信済みの場合
-        if( DRV_IRQ_NONE != ( intf & DRV_IRQ_CAN_TX0_EMPTY ) )
+        /* Notify the CAN-TX task that CAN transmission has been completed */
+        if( DRV_IRQ_NONE != ( occurred_irq & DRV_IRQ_CAN_TX0_EMPTY ) )
         {
-            handle = get_can_tx_task_handler();
-
-            xTaskNotifyGive( handle );
+            xTaskNotifyGive( can_tx_task_handler );
         }
 
+        /* Enables a disabled interrupt when an IRQ occurs */
         drv_enable_irq( TRUE );
     }
-}
-
-
-static UINT32 build_std_canid( const UINT8 *hdr )
-{
-    return (UINT32)(
-        (UINT32)( (UINT32)( (UINT32)hdr[ MCP2515_CANHDR_SIDH ] << 3U ) & 0x000007F8UL )
-      | (UINT32)( (UINT32)( (UINT32)hdr[ MCP2515_CANHDR_SIDL ] >> 5U ) & 0x00000007UL )
-    );
 }

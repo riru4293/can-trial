@@ -230,18 +230,18 @@ drv_result_t init_mcp2515( VOID )
             1 = RXB0 にメッセージが受信されると割り込む
             0 = 禁止
     */
-    write_reg( REG_CANINTE, (UINT8)( DRV_IRQ_CAN_CTRL_WAKE
-        | DRV_IRQ_CAN_TX2_EMPTY | DRV_IRQ_CAN_TX1_EMPTY | DRV_IRQ_CAN_TX0_EMPTY
-        | DRV_IRQ_CAN_RX1_FULL | DRV_IRQ_CAN_RX0_FULL ) );
+    // write_reg( REG_CANINTE, (UINT8)( DRV_IRQ_CAN_CTRL_WAKE
+    //     | DRV_IRQ_CAN_TX2_EMPTY | DRV_IRQ_CAN_TX1_EMPTY | DRV_IRQ_CAN_TX0_EMPTY
+    //     | DRV_IRQ_CAN_RX1_FULL | DRV_IRQ_CAN_RX0_FULL ) );
 
-    /* ノーマルモード */
-    begin_spi();
-    write_spi( SPICMD_MODBITS_REG );
-    write_spi( REG_CANCTRL );
-    write_spi( MASKOF_OPMOD );
-    write_spi( OPMODE_NORMAL );
-    end_spi();
-    sleep_ms(100); // 適当なwait
+    // /* ノーマルモード */
+    // begin_spi();
+    // write_spi( SPICMD_MODBITS_REG );
+    // write_spi( REG_CANCTRL );
+    // write_spi( MASKOF_OPMOD );
+    // write_spi( OPMODE_NORMAL );
+    // end_spi();
+    // sleep_ms(100); // 適当なwait
 
     return DRV_SUCCESS;
 }
@@ -288,13 +288,50 @@ static void modify_reg( const UINT8 addr, const UINT8 mask, const UINT8 val ) {
 }
 
 
-VOID drv_clear_irq_sources( UINT8 sources )
+VOID drv_clear_occurred_irq( UINT8 sources )
 {
     modify_reg( REG_CANINTF, sources, 0x00U );
 }
 
 
-UINT8 drv_get_irq_sources()
+UINT8 drv_get_occurred_irq()
 {
-    return read_reg( REG_CANINTF );
+    UINT8 enabled;
+    UINT8 occurred;
+
+    enabled = read_reg( REG_CANINTE );
+    occurred = read_reg( REG_CANINTF );
+
+    return (UINT8)( occurred & enabled );
 }
+
+
+VOID drv_disable_irq_sources( UINT8 sources )
+{
+    modify_reg( REG_CANINTE, sources, DRV_IRQ_NONE );
+}
+
+
+VOID drv_enable_irq_sources( UINT8 sources )
+{
+    modify_reg( REG_CANINTE, sources, DRV_IRQ_ALL );
+}
+
+#ifdef DEBUG
+UINT8 drvtmp_get_eflg( VOID )
+{
+    return read_reg( REG_EFLG );
+}
+
+VOID drvtmp_to_normal_mode( VOID )
+{
+    begin_spi();
+    write_spi( SPICMD_MODBITS_REG );
+    write_spi( REG_CANCTRL );
+    write_spi( MASKOF_OPMOD );
+    write_spi( OPMODE_NORMAL );
+    end_spi();
+
+    while( 0U != ( read_reg( REG_CANSTAT ) & 0xE0U ) );
+}
+#endif /* DEBUG */

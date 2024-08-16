@@ -22,13 +22,12 @@ static TaskHandle_t task_handle = NULL;
 #define SPICMD_READ_RX0_HDR             ( 0x90U )
 #define MCP2515_CANHDR_SIDH 0
 #define MCP2515_CANHDR_SIDL 1
-#define SPICMD_REQ_TX0                  ( 0x81U )
 static UINT32 build_std_canid( const UINT8 *hdr );
 
 
 VOID create_can_rx_task( VOID )
 {
-    xTaskCreate( task, "CAN_RX_TASK", 1024, NULL, 9, &task_handle );
+    xTaskCreate( task, "CAN_RX_TASK", 1024, NULL, 6, &task_handle );
 }
 
 
@@ -60,7 +59,8 @@ static VOID task( VOID* unused_arg )
 
         rxid = build_std_canid( rxhdr );
 
-        drv_clear_irq_sources( DRV_IRQ_CAN_RX0_FULL );
+        drv_clear_occurred_irq( DRV_IRQ_CAN_RX0_FULL );
+        drv_enable_irq_sources( DRV_IRQ_CAN_RX0_FULL );
     }
 }
 

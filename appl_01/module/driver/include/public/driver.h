@@ -34,7 +34,15 @@ VOID drv_write_spi( const UINT8 val );
 VOID drv_set_irq_callback( drv_irq_callback_t callback );
 VOID drv_enable_irq( BOOL enabled );
 
-UINT8 drv_get_irq_sources( VOID );
-VOID drv_clear_irq_sources( UINT8 sources );
+UINT8 drv_get_occurred_irq( VOID );
+VOID drv_clear_occurred_irq( UINT8 sources );
+VOID drv_disable_irq_sources( UINT8 sources );
+VOID drv_enable_irq_sources( UINT8 sources );
+
+#ifdef DEBUG
+UINT8 drvtmp_get_eflg( VOID );
+VOID drvtmp_to_normal_mode( VOID );
+#endif /* DEBUG */
+
 
 #endif /* DRIVER_H */
