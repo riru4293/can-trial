@@ -17,7 +17,7 @@ target_compile_features(${MOD_NAME} PRIVATE cxx_std_11)
 target_include_directories(${MOD_NAME}
     PRIVATE
     include
-    ${APP_01_INCLUDE_DIRECTORY}
+    ${APP_01_COMMON_INCLUDE_DIRECTORY}
 )
 
 target_link_libraries(${MOD_NAME}
