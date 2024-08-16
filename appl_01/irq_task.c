@@ -30,7 +30,7 @@ VOID irq_handler( VOID )
 {
     static BaseType_t higher_priority_task_woken = pdFALSE;
 
-    drv_enable_irq( FALSE );
+    drv_disable_irq_handling();
 
     vTaskNotifyGiveFromISR( task_handle, &higher_priority_task_woken );
 
@@ -50,13 +50,13 @@ static VOID task( VOID* unused )
 #endif /* DEBUG */
  
     /* Set callback function for IRQ */
-    drv_set_irq_callback( irq_handler );
+    drv_set_irq_handler( irq_handler );
 
     /* Enable IRQ */
-    drv_enable_irq( TRUE );
+    drv_enable_irq_handling();
 
     /* Enable IRQ sources */
-    drv_enable_irq_sources( IRQ_SOURCES );
+    drv_enable_irq_factor( IRQ_SOURCES );
 
     drvtmp_to_normal_mode();
 
@@ -69,13 +69,13 @@ static VOID task( VOID* unused )
         taskENTER_CRITICAL();
 
         /* Get IRQ sources */
-        occurred_irq = drv_get_occurred_irq();
+        occurred_irq = drv_get_irq_occurrence();
 
         /* If an IRQ source exists, disable it. */
         /* Because it prevents reentrancy by the same IRQ source */
         if ( DRV_IRQ_NONE != occurred_irq )
         {
-            drv_disable_irq_sources( occurred_irq );
+            drv_disable_irq_factor( occurred_irq );
         }
 #ifdef DEBUG
         else{
@@ -109,6 +109,6 @@ static VOID task( VOID* unused )
         }
 
         /* Enables a disabled interrupt when an IRQ occurs */
-        drv_enable_irq( TRUE );
+        drv_enable_irq_handling();
     }
 }

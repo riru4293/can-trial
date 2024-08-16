@@ -59,8 +59,8 @@ static VOID task( VOID* unused )
 
         rxid = build_std_canid( rxhdr );
 
-        drv_clear_occurred_irq( DRV_IRQ_CAN_RX0_FULL );
-        drv_enable_irq_sources( DRV_IRQ_CAN_RX0_FULL );
+        drv_clear_irq_occurrence( DRV_IRQ_CAN_RX0_FULL );
+        drv_enable_irq_factor( DRV_IRQ_CAN_RX0_FULL );
     }
 }
 

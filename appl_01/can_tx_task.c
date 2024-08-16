@@ -61,8 +61,8 @@ static VOID task( VOID* unused )
         /* Begin prohibiting task switching */
         vTaskSuspendAll();
 
-        drv_clear_occurred_irq( DRV_IRQ_CAN_TX0_EMPTY );
-        drv_enable_irq_sources( DRV_IRQ_CAN_TX0_EMPTY );
+        drv_clear_irq_occurrence( DRV_IRQ_CAN_TX0_EMPTY );
+        drv_enable_irq_factor( DRV_IRQ_CAN_TX0_EMPTY );
 
         /* Request to send. */
         drv_begin_spi();

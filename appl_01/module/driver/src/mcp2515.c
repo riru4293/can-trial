@@ -203,45 +203,6 @@ drv_result_t init_mcp2515( VOID )
     /* 受信バッファ２設定。フィルタ一致のみ受信。 */
     write_reg( REG_RXB1CTRL, 0x00 );
 
-    /* 割り込みを有効化 */
-    /*
-        bit 7 MERRE: メッセージエラー割り込み許可ビット
-            1 = メッセージ送受信中にエラー発生で割り込む
-            0 = 禁止
-        bit 6 WAKIE: ウェイクアップ割り込み許可ビット
-            1 = CAN バスアクティビティで割り込む
-            0 = 禁止
-        bit 5 ERRIE: エラー割り込み許可ビット (EFLG レジスタの複数要因 )
-            1 = EFLG エラー状態が変化したとき割り込む
-            0 = 禁止
-        bit 4 TX2IE: 送信バッファ 2 空割り込み許可ビット
-            1 = TXB2 が空になると割り込む
-            0 = 禁止
-        bit 3 TX1IE: 送信バッファ 1 空割り込み許可ビット
-            1 = TXB1 が空になると割り込む
-            0 = 禁止
-        bit 2 TX0IE: 送信バッファ 0 空割り込み許可ビット
-            1 = TXB0 が空になると割り込む
-            0 = 禁止
-        bit 1 RX1IE: 受信バッファ 1 フル割り込み許可ビット
-            1 = RXB1 にメッセージが受信されると割り込む
-            0 = 禁止
-        bit 0 RX0IE: 受信バッファ 0 フル割り込み許可ビット
-            1 = RXB0 にメッセージが受信されると割り込む
-            0 = 禁止
-    */
-    // write_reg( REG_CANINTE, (UINT8)( DRV_IRQ_CAN_CTRL_WAKE
-    //     | DRV_IRQ_CAN_TX2_EMPTY | DRV_IRQ_CAN_TX1_EMPTY | DRV_IRQ_CAN_TX0_EMPTY
-    //     | DRV_IRQ_CAN_RX1_FULL | DRV_IRQ_CAN_RX0_FULL ) );
-
-    // /* ノーマルモード */
-    // begin_spi();
-    // write_spi( SPICMD_MODBITS_REG );
-    // write_spi( REG_CANCTRL );
-    // write_spi( MASKOF_OPMOD );
-    // write_spi( OPMODE_NORMAL );
-    // end_spi();
-    // sleep_ms(100); // 適当なwait
 
     return DRV_SUCCESS;
 }
@@ -288,13 +249,13 @@ static void modify_reg( const UINT8 addr, const UINT8 mask, const UINT8 val ) {
 }
 
 
-VOID drv_clear_occurred_irq( UINT8 sources )
+VOID drv_clear_irq_occurrence( drv_irq_t irq )
 {
-    modify_reg( REG_CANINTF, sources, 0x00U );
+    modify_reg( REG_CANINTF, irq, DRV_IRQ_NONE );
 }
 
 
-UINT8 drv_get_occurred_irq()
+drv_irq_t drv_get_irq_occurrence()
 {
     UINT8 enabled;
     UINT8 occurred;
@@ -302,19 +263,19 @@ UINT8 drv_get_occurred_irq()
     enabled = read_reg( REG_CANINTE );
     occurred = read_reg( REG_CANINTF );
 
-    return (UINT8)( occurred & enabled );
+    return (drv_irq_t)( occurred & enabled );
 }
 
 
-VOID drv_disable_irq_sources( UINT8 sources )
+VOID drv_disable_irq_factor( drv_irq_t irq )
 {
-    modify_reg( REG_CANINTE, sources, DRV_IRQ_NONE );
+    modify_reg( REG_CANINTE, irq, DRV_IRQ_NONE );
 }
 
 
-VOID drv_enable_irq_sources( UINT8 sources )
+VOID drv_enable_irq_factor( drv_irq_t irq )
 {
-    modify_reg( REG_CANINTE, sources, DRV_IRQ_ALL );
+    modify_reg( REG_CANINTE, irq, DRV_IRQ_ALL );
 }
 
 #ifdef DEBUG

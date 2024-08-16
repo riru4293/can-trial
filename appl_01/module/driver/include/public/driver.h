@@ -7,39 +7,46 @@
 
 typedef UINT8 drv_result_t;
 typedef VOID (*drv_irq_callback_t)( VOID );
+typedef UINT8 drv_irq_t;
 
 #define DRV_SUCCESS ( (UINT8)0x00U )
 #define DRV_FAILURE ( (UINT8)0xFFU )
 
-#define DRV_IRQ_NONE            ( (UINT8)0x00U )
-#define DRV_IRQ_CAN_MSG_ERR     ( (UINT8)0x80U )
-#define DRV_IRQ_CAN_CTRL_WAKE   ( (UINT8)0x40U )
-#define DRV_IRQ_CAN_CTRL_ERR    ( (UINT8)0x20U )
-#define DRV_IRQ_CAN_TX2_EMPTY   ( (UINT8)0x10U )
-#define DRV_IRQ_CAN_TX1_EMPTY   ( (UINT8)0x08U )
-#define DRV_IRQ_CAN_TX0_EMPTY   ( (UINT8)0x04U )
-#define DRV_IRQ_CAN_RX1_FULL    ( (UINT8)0x02U )
-#define DRV_IRQ_CAN_RX0_FULL    ( (UINT8)0x01U )
-#define DRV_IRQ_ALL             ( (UINT8)0xFFU )
+#define DRV_IRQ_NONE            ( (drv_irq_t)0x00U )
+#define DRV_IRQ_CAN_MSG_ERR     ( (drv_irq_t)0x80U )
+#define DRV_IRQ_CAN_CTRL_WAKE   ( (drv_irq_t)0x40U )
+#define DRV_IRQ_CAN_CTRL_ERR    ( (drv_irq_t)0x20U )
+#define DRV_IRQ_CAN_TX2_EMPTY   ( (drv_irq_t)0x10U )
+#define DRV_IRQ_CAN_TX1_EMPTY   ( (drv_irq_t)0x08U )
+#define DRV_IRQ_CAN_TX0_EMPTY   ( (drv_irq_t)0x04U )
+#define DRV_IRQ_CAN_RX1_FULL    ( (drv_irq_t)0x02U )
+#define DRV_IRQ_CAN_RX0_FULL    ( (drv_irq_t)0x01U )
+#define DRV_IRQ_ALL             ( (drv_irq_t)0xFFU )
 
 drv_result_t drv_init( VOID );
 VOID drv_turn_on_internal_led( VOID );
 VOID drv_turn_off_internal_led( VOID );
+
+
+#ifdef DEBUG
 VOID drv_begin_spi( VOID );
 VOID drv_end_spi( VOID );
 VOID drv_read_array_spi( const size_t n, UINT8 *buf );
 VOID drv_write_array_spi( const size_t n, const UINT8 const *buf );
 VOID drv_write_spi( const UINT8 val );
+#endif /* DEBUG */
 
-VOID drv_set_irq_callback( drv_irq_callback_t callback );
-VOID drv_enable_irq( BOOL enabled );
+VOID drv_set_irq_handler( drv_irq_callback_t handler );
+VOID drv_enable_irq_handling( VOID );
+VOID drv_disable_irq_handling( VOID );
 
-UINT8 drv_get_occurred_irq( VOID );
-VOID drv_clear_occurred_irq( UINT8 sources );
-VOID drv_disable_irq_sources( UINT8 sources );
-VOID drv_enable_irq_sources( UINT8 sources );
+drv_irq_t drv_get_irq_occurrence( VOID );
+VOID drv_clear_irq_occurrence( drv_irq_t irq );
+VOID drv_disable_irq_factor( drv_irq_t irq );
+VOID drv_enable_irq_factor( drv_irq_t irq );
 
-#ifdef DEBUG
+
+#ifdef DEBUG 
 UINT8 drvtmp_get_eflg( VOID );
 VOID drvtmp_to_normal_mode( VOID );
 #endif /* DEBUG */
