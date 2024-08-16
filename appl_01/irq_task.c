@@ -7,9 +7,7 @@
 #include "driver/include/public/driver.h"
 #include "logger/include/public/logger.h"
 
-#include "private/irq_task.h"
-#include "private/can_rx_task.h"
-#include "private/can_tx_task.h"
+#include "public/appl_task.h"
 
 #define IRQ_SOURCES (UINT8)( DRV_IRQ_CAN_TX0_EMPTY | DRV_IRQ_CAN_RX0_FULL )
 
@@ -19,6 +17,12 @@ static VOID task( VOID* unused );
 
 /* Globals */
 static TaskHandle_t task_handle = NULL;
+
+
+TaskHandle_t get_irq_task_handler( VOID )
+{
+    return task_handle;
+}
 
 
 VOID create_irq_task( VOID )
@@ -43,10 +47,10 @@ static VOID task( VOID* unused )
 {
     const TaskHandle_t can_rx_task_handler = get_can_rx_task_handler();
     const TaskHandle_t can_tx_task_handler = get_can_tx_task_handler();
-    UINT8 occurred_irq;
+    drv_irq_t irq_occurrence;
 
 #ifdef DEBUG
-    UINT8 tmp;
+    drv_err_t tmp;
 #endif /* DEBUG */
  
     /* Set callback function for IRQ */
@@ -69,13 +73,13 @@ static VOID task( VOID* unused )
         taskENTER_CRITICAL();
 
         /* Get IRQ sources */
-        occurred_irq = drv_get_irq_occurrence();
+        irq_occurrence = drv_get_irq_occurrence();
 
         /* If an IRQ source exists, disable it. */
         /* Because it prevents reentrancy by the same IRQ source */
-        if ( DRV_IRQ_NONE != occurred_irq )
+        if ( DRV_IRQ_NONE != irq_occurrence )
         {
-            drv_disable_irq_factor( occurred_irq );
+            drv_disable_irq_factor( irq_occurrence );
         }
 #ifdef DEBUG
         else{
@@ -85,7 +89,7 @@ static VOID task( VOID* unused )
 
 #ifdef DEBUG
         /* CAN受信オーバーフロー確認 */
-        tmp = drvtmp_get_eflg();
+        tmp = drv_get_err_occurrence();
         if( tmp & 0xC0 )
             printf("over! %02X", tmp);
 #endif /* DEBUG */
@@ -97,13 +101,13 @@ static VOID task( VOID* unused )
 
 
         /* Notify the CAN-RX task of CAN reception */
-        if( DRV_IRQ_NONE != ( occurred_irq & DRV_IRQ_CAN_RX0_FULL ) )
+        if( DRV_IRQ_NONE != ( irq_occurrence & DRV_IRQ_CAN_RX0_FULL ) )
         {
             xTaskNotifyGive( can_rx_task_handler );
         }
 
         /* Notify the CAN-TX task that CAN transmission has been completed */
-        if( DRV_IRQ_NONE != ( occurred_irq & DRV_IRQ_CAN_TX0_EMPTY ) )
+        if( DRV_IRQ_NONE != ( irq_occurrence & DRV_IRQ_CAN_TX0_EMPTY ) )
         {
             xTaskNotifyGive( can_tx_task_handler );
         }

@@ -7,7 +7,7 @@
 #include "driver/include/public/driver.h"
 #include "logger/include/public/logger.h"
 
-#include "private/can_rx_task.h"
+#include "public/appl_task.h"
 
 
 /* Prototypes */

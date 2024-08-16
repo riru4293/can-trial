@@ -278,12 +278,27 @@ VOID drv_enable_irq_factor( drv_irq_t irq )
     modify_reg( REG_CANINTE, irq, DRV_IRQ_ALL );
 }
 
-#ifdef DEBUG
-UINT8 drvtmp_get_eflg( VOID )
+
+drv_err_t drv_get_err_occurrence( VOID )
 {
-    return read_reg( REG_EFLG );
+    return (drv_err_t)read_reg( REG_EFLG );
 }
 
+
+VOID drv_clear_err_rx0_overflow( drv_err_t err )
+{
+    modify_reg( REG_EFLG, DRV_ERR_RX0_OVERFLOW, DRV_ERR_ALL );
+}
+
+
+VOID drv_clear_err_rx1_overflow( drv_err_t err )
+{
+    modify_reg( REG_EFLG, DRV_ERR_RX1_OVERFLOW, DRV_ERR_ALL );
+}
+
+
+
+#ifdef DEBUG
 VOID drvtmp_to_normal_mode( VOID )
 {
     begin_spi();

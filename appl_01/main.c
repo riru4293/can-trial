@@ -9,9 +9,7 @@
 #include "logger/include/public/logger.h"
 
 #include "private/main.h"
-#include "private/irq_task.h"
-#include "private/can_rx_task.h"
-#include "private/can_tx_task.h"
+#include "public/appl_task.h"
 
 
 /*
