@@ -49,16 +49,16 @@ VOID drv_write_array_spi( const size_t n, const UINT8 const *buf );
 VOID drv_write_spi( const UINT8 val );
 #endif /* DEBUG */
 
-VOID drv_set_irq_handler( drv_irq_callback_t handler );
+VOID drv_set_irq_callback( drv_irq_callback_t callback );
 VOID drv_enable_irq_handling( VOID );
 VOID drv_disable_irq_handling( VOID );
 
-drv_irq_t drv_get_irq_occurrence( VOID );
-VOID drv_clear_irq_occurrence( drv_irq_t irq );
+drv_irq_t drv_get_occurred_irq( VOID );
+VOID drv_clear_occurred_irq( drv_irq_t irq );
 VOID drv_disable_irq_factor( drv_irq_t irq );
 VOID drv_enable_irq_factor( drv_irq_t irq );
 
-drv_err_t drv_get_err_occurrence( VOID );
+drv_err_t drv_get_occurred_err( VOID );
 VOID drv_clear_err_rx0_overflow( drv_err_t err );
 VOID drv_clear_err_rx1_overflow( drv_err_t err );
 

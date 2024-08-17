@@ -56,7 +56,7 @@ static UINT8 tmp_buf[ 8 ] = { 0U };
 /* -------------------------------------------------------------------------- */
 VOID create_can_init_task( VOID )
 {
-    xTaskCreate( task, "CAN_INIT_TASK", 1024, NULL, 8, &task_handle );
+    xTaskCreate( task, "CAN_INIT_TASK", 1024, NULL, CAN_INIT_TASK_PRIORITY, &task_handle );
 }
 
 
@@ -97,7 +97,7 @@ static VOID task( VOID* unused )
         /* Begin critical section */
         taskENTER_CRITICAL();
 
-        restart_task( get_can_irq_task_handler(), create_can_irq_task );
+        restart_task( canirq_get_task_handler(), canirq_create_task );
         restart_task( get_can_rx_task_handler(), create_can_rx_task );
         restart_task( get_can_tx_task_handler(), create_can_tx_task );
         restart_task( log_get_task_handler(), log_create_task );

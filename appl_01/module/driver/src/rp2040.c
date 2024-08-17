@@ -17,12 +17,12 @@
 
 
 /* Prototypes */
-static VOID drv_gpio_irq_handler( UINT gpio, UINT32 events );
+static VOID irq_callback( UINT gpio, UINT32 events );
 static VOID enable_irq_handling( BOOL enabled );
 
 
 /* Globals */
-static drv_irq_callback_t irq_handler = NULL;
+static drv_irq_callback_t external_irq_callback = NULL;
 
 
 drv_result_t init_stdio( VOID )
@@ -95,9 +95,9 @@ VOID write_spi( const UINT8 val )
 }
 
 
-VOID drv_set_irq_handler( drv_irq_callback_t handler )
+VOID drv_set_irq_callback( drv_irq_callback_t callback )
 {
-    irq_handler = handler;
+    external_irq_callback = callback;
 }
 
 
@@ -112,19 +112,20 @@ VOID drv_disable_irq_handling( VOID )
     enable_irq_handling( FALSE );
 }
 
-static VOID drv_gpio_irq_handler( UINT gpio, UINT32 events )
-{
-    if( ( NULL != irq_handler ) && ( GPIO_NUM_CAN_INTERRUPTION == gpio ) && ( GPIO_IRQ_LEVEL_LOW == events ) )
-    {
-        irq_handler();
-    }
-}
-
 
 /* -------------------------------------------------------------------------- */
 /* Private functions                                                          */
 /* -------------------------------------------------------------------------- */
 static VOID enable_irq_handling( BOOL enabled )
 {
-    gpio_set_irq_enabled_with_callback( GPIO_NUM_CAN_INTERRUPTION, GPIO_IRQ_LEVEL_LOW, enabled, drv_gpio_irq_handler );
+    gpio_set_irq_enabled_with_callback( GPIO_NUM_CAN_INTERRUPTION, GPIO_IRQ_LEVEL_LOW, enabled, irq_callback );
+}
+
+
+static VOID irq_callback( UINT gpio, UINT32 events )
+{
+    if( ( NULL != external_irq_callback ) )
+    {
+        external_irq_callback();
+    }
 }

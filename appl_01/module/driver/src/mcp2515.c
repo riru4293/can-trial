@@ -188,7 +188,7 @@ VOID drv_reset_can_controller( VOID )
     begin_spi();
     write_spi( SPICMD_RESET );
     end_spi();
-    sleep_ms(100); // 適当なwait
+    while( 0x80U != ( read_reg( REG_CANSTAT ) & 0xE0U ) ); /* Wait reset comp */
 
     /* Baudrate 125Kbps */
     begin_spi();
@@ -246,13 +246,13 @@ static void modify_reg( const UINT8 addr, const UINT8 mask, const UINT8 val ) {
 }
 
 
-VOID drv_clear_irq_occurrence( drv_irq_t irq )
+VOID drv_clear_occurred_irq( drv_irq_t irq )
 {
     modify_reg( REG_CANINTF, irq, DRV_IRQ_NONE );
 }
 
 
-drv_irq_t drv_get_irq_occurrence()
+drv_irq_t drv_get_occurred_irq()
 {
     UINT8 enabled;
     UINT8 occurred;
@@ -276,7 +276,7 @@ VOID drv_enable_irq_factor( drv_irq_t irq )
 }
 
 
-drv_err_t drv_get_err_occurrence( VOID )
+drv_err_t drv_get_occurred_err( VOID )
 {
     return (drv_err_t)read_reg( REG_EFLG );
 }

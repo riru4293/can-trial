@@ -4,6 +4,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
+#include <event_groups.h>
 
 #include "driver/include/public/driver.h"
 #include "logger/include/public/logger.h"
@@ -17,6 +18,7 @@ static VOID task( VOID* unused );
 
 /* Globals */
 static TaskHandle_t task_handle = NULL;
+static EventGroupHandle_t event_handle;
 
 
 /* temp */
@@ -28,9 +30,15 @@ BaseType_t xTimer2Started;
 #endif
 
 
+EventGroupHandle_t cantx_get_event_handle( VOID )
+{
+    return event_handle;
+}
+
+
 VOID create_can_tx_task( VOID )
 {
-    xTaskCreate( task, "CAN_TX_TASK", 1024, NULL, 5, &task_handle );
+    xTaskCreate( task, "CAN_TX_TASK", 1024, NULL, CAN_TX_TASK_PRIORITY, &task_handle );
 }
 
 
@@ -54,20 +62,26 @@ static VOID task( VOID* unused )
     xAutoReloadTimer = xTimerCreate("Reload" , 1000, pdTRUE , NULL, autoReloadTimerCallback);
     xTimer2Started = xTimerStart( xAutoReloadTimer, 0 ); 
 #endif
+
+    EventBits_t events;
+    event_handle = xEventGroupCreate(); 
+
     while( TRUE )
     {
-        ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
+        events = xEventGroupWaitBits( event_handle, 0x01U, pdTRUE, pdFALSE, portMAX_DELAY );
 
         /* Begin prohibiting task switching */
         vTaskSuspendAll();
 
-        drv_clear_irq_occurrence( DRV_IRQ_CAN_TX0_EMPTY );
+        drv_clear_occurred_irq( DRV_IRQ_CAN_TX0_EMPTY );
         drv_enable_irq_factor( DRV_IRQ_CAN_TX0_EMPTY );
 
+#ifdef DEBUG
         /* Request to send. */
         drv_begin_spi();
         drv_write_spi( SPICMD_REQ_TX0 );
         drv_end_spi();
+#endif
 
         /* End prohibiting task switching */
         (VOID)xTaskResumeAll();

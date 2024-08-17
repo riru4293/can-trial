@@ -40,7 +40,7 @@ int main()
     xTaskCreate(temp_task, "TEMP_TASK", 1024, NULL, 2, NULL);
     log_create_task();
     create_can_init_task();
-    create_can_irq_task();
+    canirq_create_task();
     create_can_rx_task();
     create_can_tx_task();
 
