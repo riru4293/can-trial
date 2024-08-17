@@ -17,7 +17,7 @@
 
 
 /* Prototypes */
-VOID drv_gpio_irq_handler( UINT gpio, UINT32 events );
+static VOID drv_gpio_irq_handler( UINT gpio, UINT32 events );
 static VOID enable_irq_handling( BOOL enabled );
 
 
@@ -112,7 +112,7 @@ VOID drv_disable_irq_handling( VOID )
     enable_irq_handling( FALSE );
 }
 
-VOID drv_gpio_irq_handler( UINT gpio, UINT32 events )
+static VOID drv_gpio_irq_handler( UINT gpio, UINT32 events )
 {
     if( ( NULL != irq_handler ) && ( GPIO_NUM_CAN_INTERRUPTION == gpio ) && ( GPIO_IRQ_LEVEL_LOW == events ) )
     {
@@ -121,6 +121,9 @@ VOID drv_gpio_irq_handler( UINT gpio, UINT32 events )
 }
 
 
+/* -------------------------------------------------------------------------- */
+/* Private functions                                                          */
+/* -------------------------------------------------------------------------- */
 static VOID enable_irq_handling( BOOL enabled )
 {
     gpio_set_irq_enabled_with_callback( GPIO_NUM_CAN_INTERRUPTION, GPIO_IRQ_LEVEL_LOW, enabled, drv_gpio_irq_handler );
