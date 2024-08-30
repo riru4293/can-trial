@@ -1,20 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 
 # Set project data
-set(PROJECT_NAME "CAN-TRIAL_PROJECT")
+set(PROJECT_NAME "RP2040_FreeRTOS_Project")
 
-# Set app name(s) and version(s)
-set(APP_01_NAME "appl_01")
-set(APP_01_VERSION_NUMBER "0.0.2")
-
-set(APP_09_NAME "appl_09")
-set(APP_09_VERSION_NUMBER "0.0.1")
-
-# Specify the app(s) source code
-set(APP_01_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/appl_01")
-set(APP_09_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/appl_09")
-
-# FROM 1.4.2 -- Set app-side debugging on debug builds
+# Set app-side debugging on debug builds
 # Now uses CMake generator expression to extract config type
 add_compile_definitions($<$<CONFIG:Debug>:DEBUG=1>)
 
@@ -26,21 +15,19 @@ set(ENV{PICO_SDK_PATH} "${CMAKE_SOURCE_DIR}/pico-sdk")
 # Set flags and directory variables
 set(FREERTOS_CFG_DIRECTORY "${CMAKE_SOURCE_DIR}/FreeRTOS-Config")
 set(FREERTOS_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/FreeRTOS-Kernel")
-set(APP_01_COMMON_INCLUDE_DIRECTORY "${CMAKE_SOURCE_DIR}/${APP_01_NAME}/include")
-set(APP_09_INCLUDE_DIRECTORY "${CMAKE_SOURCE_DIR}/${APP_09_NAME}/include")
 
 # Include the Pico SDK
 include(pico_sdk_import.cmake)
 
 # Name the project
-project(${PROJECT_NAME}
-        LANGUAGES C CXX ASM
-        DESCRIPTION "FreeRTOS-based RP2040 applications"
+project(
+    ${PROJECT_NAME}
+    LANGUAGES C CXX ASM
+    DESCRIPTION "FreeRTOS-based RP2040 applications"
 )
 
 # Initialise the Pico SDK
 pico_sdk_init()
-
 
 # Add FreeRTOS as a library
 add_library(FreeRTOS STATIC
@@ -61,6 +48,9 @@ target_include_directories(FreeRTOS PUBLIC
     ${FREERTOS_SRC_DIRECTORY}/portable/GCC/ARM_CM0
 )
 
-# Include the apps' source code
-add_subdirectory(${APP_01_SRC_DIRECTORY})
-add_subdirectory(${APP_09_SRC_DIRECTORY})
+
+# Set the appl(s) root directory
+set(APPL_TASK_TRIAL_ROOT_DIRECTORY "${CMAKE_SOURCE_DIR}/appl/task_trial")
+
+# Include the appl(s) root directory
+add_subdirectory(${APPL_TASK_TRIAL_ROOT_DIRECTORY})

@@ -5,9 +5,9 @@
  * @version   0.0.2
  * @licence   BSD-2-Clause
  */
-#include "appl_common.h"
-#include "board_driver/include/public/board_driver_api.h"
-#include "main.h"
+#include <public/appl_common.h>
+#include <public/board_driver/board_driver_api.h>
+#include <private/main.h>
 
 /*
  * GLOBALS
@@ -36,8 +36,6 @@ int main()
         // Print the application information to UART.
         printf("App: %s %s.\n", APP_NAME, APP_VERSION);
     }
-
-    temp_init();
 
     // We should never get here, but just in case...
     while(true) {

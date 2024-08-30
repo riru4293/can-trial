@@ -1,5 +1,5 @@
-#include "appl_common.h"
-#include "private/bd_gpio.h"
+#include <public/appl_common.h>
+#include <private/board_driver/bd_gpio.h>
 
 #define GPIO_NUM_SPI_1_MISO             ( (UCHAR) 4U )
 #define GPIO_NUM_SPI_1_CS               ( (UCHAR) 5U )

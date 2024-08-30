@@ -1,7 +1,7 @@
 #ifndef BOARD_DRIVER_RESULT_H
 #define BOARD_DRIVER_RESULT_H
 
-#include "appl_common.h"
+#include <public/appl_common.h>
 
 typedef UCHAR bd_result_t;
 

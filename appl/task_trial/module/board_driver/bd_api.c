@@ -1,5 +1,5 @@
-#include "public/board_driver_api.h"
-#include "private/bd_gpio.h"
+#include "public/board_driver/board_driver_api.h"
+#include "private/board_driver/bd_gpio.h"
 
 bd_result_t bd_init( VOID )
 {
