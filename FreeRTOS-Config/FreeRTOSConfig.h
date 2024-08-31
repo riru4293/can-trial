@@ -108,6 +108,18 @@
 #define INCLUDE_xTaskGetHandle                  0
 #define INCLUDE_xTaskResumeFromISR              1
 
+/* Set to 1 to enable the Memory Protection Unit (MPU), or 0 to leave the Memory
+ * Protection Unit disabled. */
+#define configENABLE_MPU                        1
+
+/* When using the v2 MPU wrapper, set configSYSTEM_CALL_STACK_SIZE to the size
+ * of the system call stack in words. Each task has a statically allocated
+ * memory buffer of this size which is used as the stack to execute system
+ * calls. For example, if configSYSTEM_CALL_STACK_SIZE is defined as 128 and
+ * there are 10 tasks in the application, the total amount of memory used for
+ * system call stacks is 128 * 10 = 1280 words. */
+#define configSYSTEM_CALL_STACK_SIZE            128
+
 /* A header file that defines trace macro can be included here. */
 
 #endif /* FREERTOS_CONFIG_H */
