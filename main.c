@@ -208,60 +208,32 @@ static VOID task( VOID* unused )
             (VOID)request_begin_communication();
             break;
         }
-
-        // events = xEventGroupWaitBits( g_network_manager_event_handle, 0x11U, pdTRUE, pdFALSE, portMAX_DELAY );
-        // ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
-        // (VOID)xEventGroupSetBits( g_network_manager_event_handle, 0x01U );
-
-        // if(0x00 != (events & 0x01))
-        // {
-        //     // Wait
-        //     vTaskDelay(3000U);
-
-        //     // 初期化終了の合図
-        //     (VOID)xEventGroupSync(g_network_manager_event_handle, 0x04U, 0x04U, portMAX_DELAY);
-
-        //     // 初期化終了を待つ
-        //     (VOID)xEventGroupSync(g_network_manager_event_handle, 0x00U, 0x08U, portMAX_DELAY);
-
-        //     // 次のイベントをやらせない
-        //     events = 0x00;
-        // }
-
-        // if(0x00 != (events & 0x10))
-        // {
-        //     printf("normal\n");
-        // }
-
-        // // 繰り返し
-        // (VOID)xTimerStart( g_timer_handle, 0 );
     }
 }
 
 static VOID task2( VOID* unused )
 {
+    EventGroupHandle_t my_hndl = g_can_tx_event_handle;
+    EventGroupHandle_t mngr_hndl = g_network_manager_event_handle;
     EventBits_t events;
-
-//     BaseType_t r;
-
-//     /* Notify to task */
-//     r = xTaskNotifyGive( g_network_manager_task_handle );
-
-//     printf("%x", r);
     
     while( TRUE )
     {
-        events = xEventGroupWaitBits( g_can_tx_event_handle, 0x01U, pdTRUE, pdFALSE, WAIT_NONE );
+        events = xEventGroupWaitBits( my_hndl, 0x01U, pdTRUE, pdFALSE, WAIT_NONE );
 
-        if(0x00 != (events & 0x01))
+        if(0x00 != (events & 0x01)) // 初期化要求
         {
+            // 準備の代わり
             vTaskDelay(500U);
-            
+
             // 準備完了を応答
-            (VOID)xEventGroupSetBits( g_network_manager_event_handle, 0x08U );
+            (VOID)xEventGroupSetBits( mngr_hndl, 0x08U );
 
             // 終了を待つ
-            (VOID)xEventGroupSync(g_network_manager_event_handle, 0x00U, 0x04U, portMAX_DELAY);
+            (VOID)xEventGroupSync(mngr_hndl, 0x00U, 0x04U, portMAX_DELAY);
+
+            // 他の作業はしない
+            continue;
         }
         else
         {
@@ -271,51 +243,4 @@ static VOID task2( VOID* unused )
 
         printf("CAN TX work\n");
         vTaskDelay(500U);
-//         /* Wait an IRQ occurred */
-//         ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
-
-//         events = xEventGroupWaitBits( g_network_manager_event_handle, 0x01U, pdTRUE, pdFALSE, portMAX_DELAY );
-
-//         if(0x00 != (events & 0x01))
-//         {
-//             // 初期化のセット
-//             (VOID)xEventGroupSetBits( g_network_manager_event_handle, 0x02U );
-
-//             printf("wait others\n");
-
-//             // 初期化開始を待つ
-//             (VOID)xEventGroupSync(g_network_manager_event_handle, 0x00U, 0x04U, portMAX_DELAY);
-
-//             printf("begin reset\n");
-
-//             // Wait
-//             vTaskDelay(3000U);
-
-//             // 初期化終了をセット
-//             (VOID)xEventGroupSync(g_network_manager_event_handle, 0x08U, 0x08U, portMAX_DELAY);
-
-//             printf("done reset\n");
-//         }
-    }
 }
-
-// static VOID timer_callback( TimerHandle_t timer_handler )
-// {
-//     static UINT8 x = 0U;
-
-//     if( 5U > x )
-//     {
-//         // taskの定期実行
-//         (VOID)xEventGroupSetBits( g_network_manager_event_handle, 0x10U );
-        
-//         x++;
-//     }
-//     else
-//     {
-//         x = 0U;
-
-//         // taskの初期化
-//         (VOID)xTaskNotifyGive( g_network_manager_task_handle );
-//         // (VOID)xEventGroupSetBits( g_network_manager_event_handle, 0x01U );
-//     }
-// }
