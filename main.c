@@ -18,28 +18,79 @@
 /* APPL */
 #include <public/appl_common.h>
 
+
+/* -------------------------------------------------------------------------- */
+/* Type definition                                                            */
+/* -------------------------------------------------------------------------- */
+// typedef struct nw_switching_evt {
+//     UINT32 completed;
+//     UINT32 ready;
+// } st_nw_switching_evt;
+
 /* -------------------------------------------------------------------------- */
 /* Prototype                                                                  */
 /* -------------------------------------------------------------------------- */
-static VOID task( VOID* unused );
+static VOID nmgr_task( VOID* unused );
 static VOID task2( VOID* unused );
-result_t request_begin_communication( VOID );
-result_t request_end_communication( VOID );
+result_t req_network_on( VOID );
+result_t req_network_off( VOID );
+static VOID turn_on_network( VOID );
+static VOID turn_off_network( VOID );
+
+/* -------------------------------------------------------------------------- */
+/* Macro                                                                      */
+/* -------------------------------------------------------------------------- */
+/* Network manager events */
+#define EVT_NMGR_NONE               ( (UINT32)0x000000U )
+#define EVT_NMGR_ON_COMPLETED       ( (UINT32)0x000001U )
+#define EVT_NMGR_OFF_COMPLETED      ( (UINT32)0x000002U )
+#define EVT_NMGR_CAN_TX_ON_READY    ( (UINT32)0x000010U )
+#define EVT_NMGR_CAN_TX_OFF_READY   ( (UINT32)0x000020U )
+#define EVT_NMGR_CAN_RX_ON_READY    ( (UINT32)0x000040U )
+#define EVT_NMGR_CAN_RX_OFF_READY   ( (UINT32)0x000080U )
+#define EVT_NMGR_CAN_IRQ_ON_READY   ( (UINT32)0x000100U )
+#define EVT_NMGR_CAN_IRQ_OFF_READY  ( (UINT32)0x000200U )
+#define EVT_NMGR_ON_READY   ( (UINT32)( \
+/* -- */(UINT32)EVT_NMGR_CAN_TX_ON_READY | (UINT32)EVT_NMGR_CAN_RX_ON_READY | (UINT32)EVT_NMGR_CAN_IRQ_ON_READY) )
+#define EVT_NMGR_OFF_READY   ((UINT32)( \
+/* -- */(UINT32)EVT_NMGR_CAN_TX_OFF_READY | (UINT32)EVT_NMGR_CAN_RX_OFF_READY | (UINT32)EVT_NMGR_CAN_IRQ_OFF_READY) )
+
+/* CAN TX events */
+#define EVT_CAN_TX_IND_NW_PRE_ON    ( (UINT32)0x000001U )
+#define EVT_CAN_TX_IND_NW_PRE_OFF   ( (UINT32)0x000002U )
+
+/* CAN RX events */
+#define EVT_CAN_RX_IND_NW_PRE_ON    ( (UINT32)0x000001U )
+#define EVT_CAN_RX_IND_NW_PRE_OFF   ( (UINT32)0x000002U )
+
+/* CAN IRQ events */
+#define EVT_CAN_IRQ_IND_NW_PRE_ON   ( (UINT32)0x000001U )
+#define EVT_CAN_IRQ_IND_NW_PRE_OFF  ( (UINT32)0x000002U )
+
+/* Network ON/OFF */
+#define NETWORK_OFF ( (UINT8)0x00U )
+#define NETWORK_ON  ( (UINT8)0x01U )
+
+/* -------------------------------------------------------------------------- */
+/* Table definition                                                           */
+/* -------------------------------------------------------------------------- */
+// const st_nw_switching_evt tbl_nw_switching_evt[] = {
+//     { EVT_NMGR_OFF_COMPLETED, EVT_NMGR_CAN_TX_OFF_READY },
+//     { EVT_NMGR_ON_COMPLETED , EVT_NMGR_CAN_TX_ON_READY  }
+// };
 
 /* -------------------------------------------------------------------------- */
 /* Global                                                                     */
 /* -------------------------------------------------------------------------- */
 volatile static SemaphoreHandle_t g_semaphore;
-static TaskHandle_t g_network_manager_task_handle = NULL;
-static TaskHandle_t g_can_tx_task_handle = NULL;
-static EventGroupHandle_t g_network_manager_event_handle;
-static EventGroupHandle_t g_can_tx_event_handle;
+static TaskHandle_t g_nmgr_tsk_hndl = NULL;
+static TaskHandle_t g_can_tx_tsk_hndl = NULL;
+static EventGroupHandle_t g_nmgr_evt_hndl;
+static EventGroupHandle_t g_can_tx_evt_hndl;
 static TimerHandle_t g_timer_handle;
 static VOID timer_callback( TimerHandle_t timer_handler );
 static BaseType_t xTimer2Started;
-static volatile QueueHandle_t g_queue_handle = NULL;
-static const UINT8 g_ending_communication = 0x00;
-static const UINT8 g_beginning_communication = 0x01;
+static volatile QueueHandle_t g_nmgr_req_queue = NULL;
 
 
 /* -------------------------------------------------------------------------- */
@@ -49,14 +100,14 @@ int main()
 {
     stdio_init_all();
 
-    g_network_manager_event_handle = xEventGroupCreate();
-    g_can_tx_event_handle = xEventGroupCreate();
+    g_nmgr_evt_hndl = xEventGroupCreate();
+    g_can_tx_evt_hndl = xEventGroupCreate();
 
     /* Create log queue */
-    g_queue_handle = xQueueCreate( 1, 1 );
+    g_nmgr_req_queue = xQueueCreate( 1, 1 );
 
-    xTaskCreate( task, "NET_MGR", 1024, NULL, 1, &g_network_manager_task_handle );
-    xTaskCreate( task2, "CAN_TX", 1024, NULL, 2, &g_can_tx_task_handle );
+    xTaskCreate( nmgr_task, "NET_MGR", 1024, NULL, 1, &g_nmgr_tsk_hndl );
+    xTaskCreate( task2, "CAN_TX", 1024, NULL, 2, &g_can_tx_tsk_hndl );
 
     vTaskStartScheduler();
 
@@ -73,11 +124,12 @@ int main()
  *          APPL_FAILURE    要求を拒否した
  * note:    CAN通信の開始もしくは終了を要求中は、要求を拒否する。
  */
-result_t request_begin_communication( VOID )
+result_t req_network_on( VOID )
 {
+    static const UINT8 nw_on = NETWORK_ON;
     BaseType_t result;
 
-    result = xQueueSendToBack( g_queue_handle, &g_beginning_communication, WAIT_NONE );
+    result = xQueueSendToBack( g_nmgr_req_queue, &nw_on, WAIT_NONE );
 
     return (pdPASS == result) ? APPL_SUCCESS : APPL_FAILURE;
 }
@@ -90,11 +142,12 @@ result_t request_begin_communication( VOID )
  *          APPL_FAILURE    要求を拒否した
  * note:    CAN通信の開始もしくは終了を要求中は、要求を拒否する。
  */
-result_t request_end_communication( VOID )
+result_t req_network_off( VOID )
 {
+    static const UINT8 nw_off = NETWORK_OFF;
     BaseType_t result;
 
-    result = xQueueSendToBack( g_queue_handle, &g_ending_communication, WAIT_NONE );
+    result = xQueueSendToBack( g_nmgr_req_queue, &nw_off, WAIT_NONE );
 
     return (pdPASS == result) ? APPL_SUCCESS : APPL_FAILURE;
 }
@@ -102,82 +155,95 @@ result_t request_end_communication( VOID )
 /* -------------------------------------------------------------------------- */
 /* Private function                                                           */
 /* -------------------------------------------------------------------------- */
-static VOID task( VOID* unused )
+static VOID nmgr_task( VOID* unused )
 {
-    BaseType_t result;
-    UINT8 request;
+    BaseType_t res;
+    UINT8 req;
 
-    (VOID)request_begin_communication();
+    /* Requests a network ON */
+    (VOID)req_network_on();
     
     while( TRUE )
     {
-        /* Wait a begin or end request of communication */
-        result = xQueuePeek( g_queue_handle, &request, WAIT_FOREVER );
+        /* Wait a request that network ON or OFF */
+        (VOID)xQueuePeek( g_nmgr_req_queue, &req, WAIT_FOREVER );
 
-        switch( request )
+        switch( req )
         {
-        case g_beginning_communication:
-            
-            // 開始準備要求
-            (VOID)xEventGroupSetBits( g_can_tx_event_handle, 0x01U );
-
-            // 準備完了待ち
-            (VOID)xEventGroupSync(g_network_manager_event_handle, 0x00U, 0x08U, portMAX_DELAY);
-
-            printf("Begin communication");
-
-            // Wait
-            vTaskDelay(1000U);
-
-            printf(" --> Done\n");
-
-            // 処理終了通知
-            (VOID)xEventGroupSetBits( g_network_manager_event_handle, 0x04U );
-            
+        case NETWORK_ON:
+            turn_on_network();
             break;
-        case g_ending_communication:
+
+        case NETWORK_OFF:
         default:
-            // 終了準備要求
-            (VOID)xEventGroupSetBits( g_can_tx_event_handle, 0x01U );
-
-            // 準備完了待ち
-            (VOID)xEventGroupSync(g_network_manager_event_handle, 0x00U, 0x08U, portMAX_DELAY);
-
-            printf("End communication");
-
-            // Wait
-            vTaskDelay(3000U);
-
-            printf(" --> Done\n");
-
-            // 処理終了通知
-            (VOID)xEventGroupSetBits( g_network_manager_event_handle, 0x04U );
-
+            turn_off_network();
             break;
+            
         }
 
+        /* Clear the queue that accepts network switching */
         do
         {
-            result = xQueueReceive( g_queue_handle, &request, WAIT_NONE );
-        } while (pdPASS == result);
+            res = xQueueReceive( g_nmgr_req_queue, &req, WAIT_NONE );
+        } while ( pdPASS == res );
 
-        switch( request )
+// == Test-code: Toggle the network ON/OFF ==
+        switch( req )
         {
-        case g_beginning_communication:
-            (VOID)request_end_communication();
+        case NETWORK_ON:
+            (VOID)req_network_off();
             break;
-        case g_ending_communication:
+        case NETWORK_OFF:
         default:
-            (VOID)request_begin_communication();
+            (VOID)req_network_on();
             break;
         }
     }
+// ==========================================
 }
+
+static VOID turn_on_network( VOID )
+{
+    /* Indicate pre network ON */
+    (VOID)xEventGroupSetBits( g_can_tx_evt_hndl, EVT_CAN_TX_IND_NW_PRE_ON );
+    // (VOID)xEventGroupSetBits( g_can_rx_evt_hndl, EVT_CAN_RX_IND_NW_PRE_ON );
+    // (VOID)xEventGroupSetBits( g_can_irq_evt_hndl, EVT_CAN_IRQ_IND_NW_PRE_ON );
+
+    /* Wait until all task is ready to network ON */
+    (VOID)xEventGroupSync( g_nmgr_evt_hndl, EVT_NMGR_NONE, EVT_NMGR_ON_READY, WAIT_FOREVER );
+
+    // ネットワークON
+    vTaskDelay(1000U);
+
+    printf("ON --> Done\n");
+
+    /* Notificate network ON completion */
+    (VOID)xEventGroupSetBits( g_nmgr_evt_hndl, EVT_NMGR_ON_COMPLETED );
+}
+static VOID turn_off_network( VOID )
+{
+    /* Indicate pre network OFF */
+    (VOID)xEventGroupSetBits( g_can_tx_evt_hndl, EVT_CAN_TX_IND_NW_PRE_OFF );
+    // (VOID)xEventGroupSetBits( g_can_rx_evt_hndl, EVT_CAN_RX_IND_NW_PRE_OFF );
+    // (VOID)xEventGroupSetBits( g_can_irq_evt_hndl, EVT_CAN_IRQ_IND_NW_PRE_OFF );
+
+    /* Wait until all task is ready to network OFF */
+    (VOID)xEventGroupSync( g_nmgr_evt_hndl, EVT_NMGR_NONE, EVT_NMGR_OFF_READY, WAIT_FOREVER );
+
+    // ネットワークOFF
+    vTaskDelay(3000U);
+
+    printf("OFF --> Done\n");
+
+    /* Notificate network OFF completion */
+    (VOID)xEventGroupSetBits( g_nmgr_evt_hndl, EVT_NMGR_OFF_COMPLETED );
+}
+
 
 static VOID task2( VOID* unused )
 {
-    EventGroupHandle_t my_hndl = g_can_tx_event_handle;
-    EventGroupHandle_t mngr_hndl = g_network_manager_event_handle;
+    EventGroupHandle_t my_hndl = g_can_tx_evt_hndl;
+    EventGroupHandle_t mngr_hndl = g_nmgr_evt_hndl;
     EventBits_t events;
     
     while( TRUE )
