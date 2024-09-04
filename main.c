@@ -4,9 +4,6 @@
 /* System */
 #include <stdio.h>
 
-/* RP2040 */
-#include <pico/stdlib.h>
-
 /* FreeRTOS */
 #include <FreeRTOS.h>
 #include <task.h>
@@ -16,7 +13,7 @@
 #include <queue.h>
 
 /* APPL */
-#include <public/appl_common.h>
+#include <public/hardware_driver.h>
 
 
 /* -------------------------------------------------------------------------- */
@@ -32,8 +29,8 @@
 /* -------------------------------------------------------------------------- */
 static VOID nmgr_task( VOID* unused );
 static VOID task2( VOID* unused );
-result_t req_network_on( VOID );
-result_t req_network_off( VOID );
+RESULT_T req_network_on( VOID );
+RESULT_T req_network_off( VOID );
 static VOID turn_on_network( VOID );
 static VOID turn_off_network( VOID );
 
@@ -98,7 +95,8 @@ static volatile QueueHandle_t g_nmgr_req_queue = NULL;
 /* -------------------------------------------------------------------------- */
 int main()
 {
-    stdio_init_all();
+    /* Initialize hardware */
+    hwdrv_init_hardware();
 
     g_nmgr_evt_hndl = xEventGroupCreate();
     g_can_tx_evt_hndl = xEventGroupCreate();
@@ -111,7 +109,7 @@ int main()
 
     vTaskStartScheduler();
 
-    while (true) {
+    while ( TRUE ) {
         // NOP
     }
 }
@@ -124,7 +122,7 @@ int main()
  *          APPL_FAILURE    要求を拒否した
  * note:    CAN通信の開始もしくは終了を要求中は、要求を拒否する。
  */
-result_t req_network_on( VOID )
+RESULT_T req_network_on( VOID )
 {
     static const UINT8 nw_on = NETWORK_ON;
     BaseType_t result;
@@ -142,7 +140,7 @@ result_t req_network_on( VOID )
  *          APPL_FAILURE    要求を拒否した
  * note:    CAN通信の開始もしくは終了を要求中は、要求を拒否する。
  */
-result_t req_network_off( VOID )
+RESULT_T req_network_off( VOID )
 {
     static const UINT8 nw_off = NETWORK_OFF;
     BaseType_t result;

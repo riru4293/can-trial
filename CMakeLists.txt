@@ -52,7 +52,10 @@ target_include_directories(FreeRTOS PUBLIC
 )
 
 # Add executable. Default name is the project name, version 0.1
-add_executable(can-trial main.c )
+add_executable(can-trial
+  main.c
+  rp2040.c
+)
 
 pico_set_program_name(can-trial "can-trial")
 pico_set_program_version(can-trial "0.1")
