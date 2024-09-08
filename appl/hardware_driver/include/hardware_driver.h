@@ -1,7 +1,7 @@
 #ifndef HARDWARE_DRIVER_H
 #define HARDWARE_DRIVER_H
 
-#include <public/appl_common.h>
+#include <appl_common.h>
 
 /* -------------------------------------------------------------------------- */
 /* Type definition                                                            */

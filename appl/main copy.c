@@ -13,26 +13,9 @@
 #include <queue.h>
 
 /* APPL */
-#include <public/hardware_driver.h>
-
-
-/* -------------------------------------------------------------------------- */
-/* Type definition                                                            */
-/* -------------------------------------------------------------------------- */
-// typedef struct nw_switching_evt {
-//     UINT32 completed;
-//     UINT32 ready;
-// } st_nw_switching_evt;
-
-/* -------------------------------------------------------------------------- */
-/* Prototype                                                                  */
-/* -------------------------------------------------------------------------- */
-static VOID nmgr_task( VOID* unused );
-static VOID task2( VOID* unused );
-RESULT_T req_network_on( VOID );
-RESULT_T req_network_off( VOID );
-static VOID turn_on_network( VOID );
-static VOID turn_off_network( VOID );
+// #include "appl_common.h"
+#include <my_types.h>
+// #include <hardware_driver.h>
 
 /* -------------------------------------------------------------------------- */
 /* Macro                                                                      */
@@ -69,12 +52,26 @@ static VOID turn_off_network( VOID );
 #define NETWORK_ON  ( (UINT8)0x01U )
 
 /* -------------------------------------------------------------------------- */
-/* Table definition                                                           */
+/* Prototype                                                                  */
+/* -------------------------------------------------------------------------- */
+static VOID nmgr_task( VOID* unused );
+static VOID task2( VOID* unused );
+RESULT_T req_network_on( VOID );
+RESULT_T req_network_off( VOID );
+static VOID turn_on_network( VOID );
+static VOID turn_off_network( VOID );
+
+/* -------------------------------------------------------------------------- */
+/* Table                                                                      */
 /* -------------------------------------------------------------------------- */
 // const st_nw_switching_evt tbl_nw_switching_evt[] = {
 //     { EVT_NMGR_OFF_COMPLETED, EVT_NMGR_CAN_TX_OFF_READY },
 //     { EVT_NMGR_ON_COMPLETED , EVT_NMGR_CAN_TX_ON_READY  }
 // };
+
+/* -------------------------------------------------------------------------- */
+/* Constant                                                                   */
+/* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
 /* Global                                                                     */
@@ -96,7 +93,7 @@ static volatile QueueHandle_t g_nmgr_req_queue = NULL;
 int main()
 {
     /* Initialize hardware */
-    hwdrv_init_hardware();
+    // hwdrv_init_hardware();
 
     g_nmgr_evt_hndl = xEventGroupCreate();
     g_can_tx_evt_hndl = xEventGroupCreate();

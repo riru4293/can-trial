@@ -1,20 +1,20 @@
-#ifndef APPL_COMMON_H
-#define APPL_COMMON_H
+#ifndef MY_TYPES_H
+#define MY_TYPES_H
 
 #include <pico/types.h>
 
 /* -------------------------------------------------------------------------- */
 /* Type definition                                                            */
 /* -------------------------------------------------------------------------- */
-typedef uint        UINT;
-typedef uint8_t     UINT8;
-typedef uint16_t    UINT16;
-typedef uint32_t    UINT32;
-typedef uint64_t    UINT64;
-typedef bool        BOOL;
-typedef void        VOID;
-typedef UINT8       RESULT_T;
-typedef size_t      SIZE_T;
+typedef uint            UINT;
+typedef uint8_t         UINT8;
+typedef uint16_t        UINT16;
+typedef uint32_t        UINT32;
+typedef uint64_t        UINT64;
+typedef bool            BOOL;
+typedef void            VOID;
+typedef UINT8           RESULT_T;
+typedef size_t          SIZE_T;
 
 /* -------------------------------------------------------------------------- */
 /* Macro                                                                      */
@@ -40,4 +40,4 @@ typedef size_t      SIZE_T;
 #define WAIT_NONE       ( (TickType_t)0U )
 #define WAIT_FOREVER    ( (TickType_t)portMAX_DELAY )
 
-#endif /* APPL_COMMON_H */
+#endif /* MY_TYPES_H */
