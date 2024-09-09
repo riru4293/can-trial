@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
+# C standard features required for building
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -18,22 +19,25 @@ set(toolchainVersion 13_2_Rel1)
 set(picotoolVersion 2.0.0)
 include(${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 # ====================================================================================
+
+# Specify the target board (must be before pico_sdk_init)
 set(PICO_BOARD pico CACHE STRING "Board type")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
+# Define the project name
 project(can_trial_project
     VERSION 1.0.0
-    DESCRIPTION "CAN trial project"
+    DESCRIPTION "Study CAN communication"
     LANGUAGES CXX C ASM
 )
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# Include sub source code
-add_subdirectory(my_stdlib)
-add_subdirectory(hardware_driver)
-add_subdirectory(free_rtos)
-add_subdirectory(appl)
+# Include the sub modules
+add_subdirectory(my_stdlib)         # Common definition
+add_subdirectory(hardware_driver)   # Operate the hardware
+add_subdirectory(free_rtos)         # FreeRTOS
+add_subdirectory(appl)              # Application
