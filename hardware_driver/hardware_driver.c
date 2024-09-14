@@ -7,7 +7,7 @@
 /* Driver */
 #include <hardware_driver.h>
 #include <private/rp2040.h>
-
+#include <private/mcp2515.h>
 
 VOID hwdrv_init_hardware( VOID )
 {
@@ -21,17 +21,22 @@ VOID hwdrv_init_hardware( VOID )
     rp2040_init_spi_1_hw();
 }
 
-RESULT_T hwdrv_reset_can_controller( VOID )
+VOID hwdrv_light_led_1( const BOOL lit )
 {
-    return APPL_SUCCESS;
+    rp2040_light_led_1( lit );
 }
-VOID hwdrv_turn_on_led( VOID )
-{}
-VOID hwdrv_turn_off_led( VOID )
-{}
-VOID hwdrv_set_irq_callback( hwdrv_irq_callback_t callback )
-{}
-VOID hwdrv_enable_can_irq_handling( VOID )
-{}
-VOID hwdrv_disable_can_irq_handling( VOID )
-{}
+
+ERR_CD_T hwdrv_reset_can_controller( VOID )
+{
+    return mcp2515_reset();
+}
+
+VOID hwdrv_set_can_irq_callback( const HWDRV_CAN_IRQ_CALLBACK_T const callback )
+{
+    rp2040_set_can_irq_callback( callback );
+}
+
+VOID hwdrv_enable_can_irq( const BOOL enabled )
+{
+    rp2040_enable_can_irq( enabled );
+}
