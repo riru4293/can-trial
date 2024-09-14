@@ -13,7 +13,7 @@ typedef uint32_t        UINT32;
 typedef uint64_t        UINT64;
 typedef bool            BOOL;
 typedef void            VOID;
-typedef UINT8           RESULT_T;
+typedef UINT8           ERR_CD_T;
 typedef size_t          SIZE_T;
 
 /* -------------------------------------------------------------------------- */
@@ -22,20 +22,14 @@ typedef size_t          SIZE_T;
 #define TRUE            ( (BOOL)true )
 #define FALSE           ( (BOOL)false )
 
-#define MINOF_UINT      ( (UINT)0U )
-#define MINOF_UINT8     ( (UINT8)0U )
-#define MINOF_UINT16    ( (UINT16)0U )
-#define MINOF_UINT32    ( (UINT32)0U )
-#define MINOF_UINT64    ( (UINT64)0U )
+#define UINT_MAX        ( (UINT)UINT_LEAST32_MAX   )
+#define UINT8_MAX       ( (UINT8)UINT_LEAST8_MAX   )
+#define UINT16_MAX      ( (UINT16)UINT_LEAST16_MAX )
+#define UINT32_MAX      ( (UINT32)UINT_LEAST32_MAX )
+#define UINT64_MAX      ( (UINT64)UINT_LEAST64_MAX )
 
-#define MAXOF_UINT      ( (UINT)UINT_LEAST32_MAX )
-#define MAXOF_UINT8     ( (UINT8)UINT_LEAST8_MAX )
-#define MAXOF_UINT16    ( (UINT16)UINT_LEAST16_MAX )
-#define MAXOF_UINT32    ( (UINT32)UINT_LEAST32_MAX )
-#define MAXOF_UINT64    ( (UINT64)UINT_LEAST64_MAX )
-
-#define APPL_SUCCESS    ( (RESULT_T)0x00U )
-#define APPL_FAILURE    ( (RESULT_T)0xFFU )
+#define E_OK            ( (ERR_CD_T)0x00U )
+#define E_NOK           ( (ERR_CD_T)0xFFU )
 
 #define WAIT_NONE       ( (TickType_t)0U )
 #define WAIT_FOREVER    ( (TickType_t)portMAX_DELAY )
