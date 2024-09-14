@@ -23,10 +23,6 @@ typedef size_t          SIZE_T;
 #define FALSE           ( (BOOL)false )
 
 #define UINT_MAX        ( (UINT)UINT_LEAST32_MAX   )
-#define UINT8_MAX       ( (UINT8)UINT_LEAST8_MAX   )
-#define UINT16_MAX      ( (UINT16)UINT_LEAST16_MAX )
-#define UINT32_MAX      ( (UINT32)UINT_LEAST32_MAX )
-#define UINT64_MAX      ( (UINT64)UINT_LEAST64_MAX )
 
 #define E_OK            ( (ERR_CD_T)0x00U )
 #define E_NOK           ( (ERR_CD_T)0xFFU )
