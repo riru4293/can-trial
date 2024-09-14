@@ -15,6 +15,7 @@ typedef bool            BOOL;
 typedef void            VOID;
 typedef UINT8           ERR_CD_T;
 typedef size_t          SIZE_T;
+typedef int             INT;
 
 /* -------------------------------------------------------------------------- */
 /* Macro                                                                      */
