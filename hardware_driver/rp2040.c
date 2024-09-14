@@ -150,7 +150,7 @@ VOID rp2040_write_spi_1_array( const SIZE_T len, const UINT8 const *p_buff )
 
 UINT8 rp2040_read_spi_1( VOID )
 {
-    UINT8 val;
+    UINT8 val = 0U;
 
     rp2040_read_spi_1_array( sizeof( UINT8 ), &val );
 
