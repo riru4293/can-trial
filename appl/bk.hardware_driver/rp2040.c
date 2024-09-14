@@ -42,8 +42,8 @@
 // static VOID enable_irq_handling( BOOL enabled );
 // static VOID irq_callback( UINT gpio, UINT32 events );
 // static VOID init_spi_0_hw( VOID );
-// static VOID begin_spi_0_communication( VOID );
-// static VOID end_spi_0_communication( VOID );
+// static VOID begin_spi_0( VOID );
+// static VOID end_spi_0( VOID );
 // static VOID read_spi_0_array( const SIZE_T len, UINT8 *buff );
 // static VOID write_spi_0_array( const SIZE_T len, const UINT8 const *buff );
 // static VOID read_spi_0( VOID );
@@ -70,13 +70,13 @@
 //     init_spi_0_hw();
 // }
 
-// RESULT_T hwdrv_reset_can_controller( VOID )
+// ERR_CD_T hwdrv_reset_can_controller( VOID )
 // {
-//     begin_spi_0_communication();
+//     begin_spi_0();
 
 //     write_spi_0( SPICMD_RESET );
 
-//     end_spi_0_communication();
+//     end_spi_0();
 
 //     while( 0x80U != ( read_reg( REG_CANSTAT ) & 0xE0U ) ); /* Wait reset comp */
 
@@ -146,12 +146,12 @@
 //     gpio_set_dir( GPIO_IDX_SPI_0_CS, GPIO_OUT );
 // }
 
-// static VOID begin_spi_0_communication( VOID )
+// static VOID begin_spi_0( VOID )
 // {
 //     gpio_put( GPIO_IDX_SPI_0_CS, GPIO_VOLT_LOW );
 // }
 
-// static VOID end_spi_0_communication( VOID )
+// static VOID end_spi_0( VOID )
 // {
 //     gpio_put( GPIO_IDX_SPI_0_CS, GPIO_VOLT_HIGH );
 // }
