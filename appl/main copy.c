@@ -56,8 +56,8 @@
 /* -------------------------------------------------------------------------- */
 static VOID nmgr_task( VOID* unused );
 static VOID task2( VOID* unused );
-RESULT_T req_network_on( VOID );
-RESULT_T req_network_off( VOID );
+ERR_CD_T req_network_on( VOID );
+ERR_CD_T req_network_off( VOID );
 static VOID turn_on_network( VOID );
 static VOID turn_off_network( VOID );
 
@@ -115,36 +115,36 @@ int main()
  * CAN通信の開始を要求する
  *
  * args:    nothing
- * return:  APPL_SUCCESS    要求を受け付けた
- *          APPL_FAILURE    要求を拒否した
+ * return:  E_OK    要求を受け付けた
+ *          E_NOK    要求を拒否した
  * note:    CAN通信の開始もしくは終了を要求中は、要求を拒否する。
  */
-RESULT_T req_network_on( VOID )
+ERR_CD_T req_network_on( VOID )
 {
     static const UINT8 nw_on = NETWORK_ON;
     BaseType_t result;
 
     result = xQueueSendToBack( g_nmgr_req_queue, &nw_on, WAIT_NONE );
 
-    return (pdPASS == result) ? APPL_SUCCESS : APPL_FAILURE;
+    return (pdPASS == result) ? E_OK : E_NOK;
 }
 
 /*
  * CAN通信の終了を要求する
  *
  * args:    nothing
- * return:  APPL_SUCCESS    要求を受け付けた
- *          APPL_FAILURE    要求を拒否した
+ * return:  E_OK    要求を受け付けた
+ *          E_NOK    要求を拒否した
  * note:    CAN通信の開始もしくは終了を要求中は、要求を拒否する。
  */
-RESULT_T req_network_off( VOID )
+ERR_CD_T req_network_off( VOID )
 {
     static const UINT8 nw_off = NETWORK_OFF;
     BaseType_t result;
 
     result = xQueueSendToBack( g_nmgr_req_queue, &nw_off, WAIT_NONE );
 
-    return (pdPASS == result) ? APPL_SUCCESS : APPL_FAILURE;
+    return (pdPASS == result) ? E_OK : E_NOK;
 }
 
 /* -------------------------------------------------------------------------- */
