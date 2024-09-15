@@ -202,8 +202,8 @@ static VOID write_reg_array( const UINT8 addr, const SIZE_T len, const UINT8 con
 static VOID write_reg( const UINT8 addr, const UINT8 val );
 static VOID modify_reg( const UINT8 addr, const UINT8 mask, const UINT8 val );
 static UINT8 read_spi( VOID );
-static VOID read_spi_array( const SIZE_T len, UINT8 const *p_buff );
-static VOID read_reg_array( const UINT8 addr, const SIZE_T len, UINT8 const *p_buff );
+static VOID read_spi_array( const SIZE_T len, UINT8 *p_buff );
+static VOID read_reg_array( const UINT8 addr, const SIZE_T len, UINT8 *p_buff );
 static UINT8 read_reg( const UINT8 addr );
 static VOID exec_cmd_reset( VOID );
 static VOID configure_can_baudrate( VOID );
@@ -294,12 +294,12 @@ static UINT8 read_spi( VOID )
     return rp2040_read_spi_1();
 }
 
-static VOID read_spi_array( const SIZE_T len, UINT8 const *p_buff )
+static VOID read_spi_array( const SIZE_T len, UINT8 *p_buff )
 {
     rp2040_read_spi_1_array( len, p_buff );
 }
 
-static VOID read_reg_array( const UINT8 addr, const SIZE_T len, UINT8 const *p_buff )
+static VOID read_reg_array( const UINT8 addr, const SIZE_T len, UINT8 *p_buff )
 {
     /* Begin SPI communication */
     begin_spi();

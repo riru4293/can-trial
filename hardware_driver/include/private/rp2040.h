@@ -17,7 +17,7 @@ VOID rp2040_set_can_irq_callback( const HWDRV_CAN_IRQ_CALLBACK_T const callback 
 VOID rp2040_enable_can_irq( const BOOL enabled );
 VOID rp2040_begin_spi_1( VOID );
 VOID rp2040_end_spi_1( VOID );
-VOID rp2040_read_spi_1_array( const SIZE_T len, UINT8 const *p_buff );
+VOID rp2040_read_spi_1_array( const SIZE_T len, UINT8 *p_buff );
 VOID rp2040_write_spi_1_array( const SIZE_T len, const UINT8 const *p_buff );
 UINT8 rp2040_read_spi_1( VOID );
 VOID rp2040_write_spi_1( const UINT8 val );

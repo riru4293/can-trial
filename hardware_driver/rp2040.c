@@ -132,7 +132,7 @@ VOID rp2040_end_spi_1( VOID )
     gpio_put( SPI_1_PORT_CS, GPIO_LEVEL_HIGH );
 }
 
-VOID rp2040_read_spi_1_array( const SIZE_T len, UINT8 const *p_buff )
+VOID rp2040_read_spi_1_array( const SIZE_T len, UINT8 *p_buff )
 {
     if( ( 0U < len ) && ( NULL != p_buff ) )
     {
